@@ -21,6 +21,9 @@ MODE_TRANSITION_MAX_DECEL = 4.0
 TESLA_PEDAL_RELEASE_GUARD_TIME = 0.15
 TESLA_PEDAL_RELEASE_GUARD_MAX_DECEL = 0.35
 
+# Volkswagen Taos departure-gap threshold (metres)
+VOLKSWAGEN_TAOS_DEPARTURE_MIN_GAP = 2.0
+
 LongCtrlState = car.CarControl.Actuators.LongControlState
 
 def apply_deadzone(error, deadzone):
@@ -174,6 +177,30 @@ class LongControl:
       self.stop_release_counter = 0
       return False
 
+    # Taos departure-gap
+    if self.vehicle_tuning.is_volkswagen_taos and CS.vEgo < 0.1:
+      valid_leads = [
+        lead for lead in (leads or ())
+        if bool(getattr(lead, "status", False))
+        and 0.0 < float(getattr(lead, "dRel", 0.0))
+        and abs(float(getattr(lead, "yRel", 0.0))) <= 1.75
+      ]
+
+      if valid_leads:
+        nearest_lead = min(
+          valid_leads,
+          key=lambda lead: float(lead.dRel),
+        )
+
+        lead_distance = float(nearest_lead.dRel)
+        departure_hold_requested = (
+          lead_distance < VOLKSWAGEN_TAOS_DEPARTURE_MIN_GAP
+        )
+
+        if departure_hold_requested:
+          self.stop_release_counter = 0
+          return False
+
     if CS.vEgo > starpilot_toggles.vEgoStarting:
       self.stop_release_counter = int(round(STOPPING_RELEASE_HYSTERESIS / DT_CTRL))
       return True
@@ -288,6 +315,44 @@ class LongControl:
         output_accel = min(starpilot_toggles.startAccel, profile_max_accel)
       else:
         output_accel = starpilot_toggles.startAccel
+
+      # Volkswagen Taos progressive departure.
+      if self.vehicle_tuning.is_volkswagen_taos:
+        valid_leads = [
+          lead for lead in (leads or ())
+          if bool(getattr(lead, "status", False))
+          and 0.0 < float(getattr(lead, "dRel", 0.0))
+          and abs(float(getattr(lead, "yRel", 0.0))) <= 1.75
+        ]
+
+        if valid_leads:
+          lead = min(valid_leads, key=lambda lead: float(lead.dRel))
+
+          lead_distance = float(lead.dRel)
+          ego_speed = float(CS.vEgo)
+          lead_speed = max(0.0, ego_speed + float(lead.vRel))
+
+          desired_gap = VOLKSWAGEN_TAOS_DEPARTURE_MIN_GAP + 1.5 * ego_speed
+          distance_error = lead_distance - desired_gap
+          speed_error = lead_speed - ego_speed
+
+          # Calculate proportional response.
+          distance_gain = 0.15
+          speed_gain = 0.40
+
+          lead_accel = (
+            distance_gain * distance_error +
+            speed_gain * speed_error
+          )
+
+          # remove this line:
+          #output_accel = starpilot_toggles.startAccel
+          output_accel = clip(
+            min(float(a_target), lead_accel),
+            0.0,
+            float(starpilot_toggles.startAccel),
+          )
+          # output_accel = clip(lead_accel,0.0,float(starpilot_toggles.startAccel))
       self.reset()
 
     else:  # LongCtrlState.pid
@@ -302,6 +367,9 @@ class LongControl:
         a_target, CS.vEgo, leads=leads,
       )
       a_target = self.vehicle_tuning.shape_hyundai_elantra_lead_target(
+        a_target, CS.vEgo, should_stop, leads,
+      )
+      a_target = self.vehicle_tuning.shape_volkswagen_taos_prestop_target(
         a_target, CS.vEgo, should_stop, leads,
       )
       error = a_target - CS.aEgo
@@ -340,6 +408,10 @@ class LongControl:
         has_lead,
       )
       raw_output_accel = self.vehicle_tuning.cap_hyundai_elantra_lead_output(
+        raw_output_accel, CS.vEgo, should_stop, leads,
+      )
+
+      raw_output_accel = self.vehicle_tuning.cap_volkswagen_taos_prestop_output(
         raw_output_accel, CS.vEgo, should_stop, leads,
       )
 
