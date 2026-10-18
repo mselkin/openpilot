@@ -76,7 +76,7 @@ VOLKSWAGEN_TAOS_PRESTOP_REQUIRED_DECEL_GAIN = 1.3
 
 # Maximum braking that the pre-stop layer itself may request.
 #VOLKSWAGEN_TAOS_PRESTOP_DECEL_LIMIT = -2.6
-VOLKSWAGEN_TAOS_PRESTOP_DECEL_LIMIT = -2.6
+VOLKSWAGEN_TAOS_PRESTOP_DECEL_LIMIT = -2.8
 
 # VOLKSWAGEN_TAOS_COMFORT_STOP
 VOLKSWAGEN_TAOS_COMFORT_STOP_CRAWL_SPEED = 0.5
@@ -443,6 +443,7 @@ class LongControlVehicleTuning:
       return output_accel
     return max(float(output_accel), float(stop_accel))
 
+  # TAOS Prebraking
   def shape_volkswagen_taos_prestop_target(self, a_target, v_ego, should_stop, leads=None):
     """Shed closing speed early before handing off to the normal stopping state."""
     if (
