@@ -74,6 +74,16 @@ HYUNDAI_SANTA_FE_FINAL_STOP_CAP_V = [-0.25, -0.30, -0.50, -0.90]
 # closing speed over the available distance.
 VOLKSWAGEN_TAOS_PRESTOP_REQUIRED_DECEL_GAIN = 1.3
 
+# Lead speed at which custom pre-braking is fully disabled (m/s).
+#VOLKSWAGEN_TAOS_PRESTOP_LEAD_SPEED_REF = 5.0
+VOLKSWAGEN_TAOS_PRESTOP_LEAD_SPEED_REF = 6.67
+
+# Minimum desired following distance in metres.
+VOLKSWAGEN_TAOS_PRESTOP_MIN_GAP = 2.0
+
+# Additional following distance based on speed (seconds).
+VOLKSWAGEN_TAOS_PRESTOP_TIME_GAP = 2.0
+
 # Maximum braking that the pre-stop layer itself may request.
 #VOLKSWAGEN_TAOS_PRESTOP_DECEL_LIMIT = -2.6
 VOLKSWAGEN_TAOS_PRESTOP_DECEL_LIMIT = -2.8
@@ -262,6 +272,7 @@ class LongControlVehicleTuning:
 
     return departure_accel_cap
 
+  # TAOS Soften final braking
   def shape_stopping_accel(self, output_accel, a_target, should_stop, v_ego, has_lead, stop_accel, leads=None):
     """Brake firmly during should_stop, then progressively soften near zero speed."""
     if (
@@ -486,22 +497,32 @@ class LongControlVehicleTuning:
     if closing_speed <= 0.0:
       return a_target
 
-    # Deceleration required to eliminate the current closing speed
-    # over the actual lead distance.
-    required_decel = -(
-      closing_speed ** 2 /
-      (2.0 * lead_distance)
+    # Calculate a speed-dependent desired following gap.
+    desired_gap = (
+      VOLKSWAGEN_TAOS_PRESTOP_MIN_GAP +
+      float(v_ego) * VOLKSWAGEN_TAOS_PRESTOP_TIME_GAP
     )
 
+    # Reserve the desired gap when calculating braking distance.
+    available_distance = max(
+      0.1,
+      lead_distance - desired_gap
+    )
+
+    required_decel = -(
+      closing_speed ** 2 /
+      (2.0 * available_distance)
+    )
+    
     # Full pre-stop assistance for a stopped lead.
     # Progressively reduce intervention as the lead moves faster.
     moving_lead_factor = min(
       1.0,
-      lead_speed / 5.0
+      lead_speed / VOLKSWAGEN_TAOS_PRESTOP_LEAD_SPEED_REF
     )
 
-    # At 5.0 m/s (~18 km/h) and above, leave moving-lead following
-    # entirely to the normal longitudinal planner.
+    # At the reference lead speed and above, leave moving-lead
+    # following entirely to the normal longitudinal planner.
     if moving_lead_factor >= 1.0:
       return a_target
 
@@ -572,9 +593,19 @@ class LongControlVehicleTuning:
     if closing_speed <= 0.0:
       return output_accel
 
+    desired_gap = (
+     VOLKSWAGEN_TAOS_PRESTOP_MIN_GAP +
+    lead_speed * VOLKSWAGEN_TAOS_PRESTOP_TIME_GAP
+    )
+    
+    available_distance = max(
+      0.1,
+      lead_distance - desired_gap
+    )
+
     required_decel = -(
       closing_speed ** 2 /
-      (2.0 * lead_distance)
+      (2.0 * available_distance)
     )
 
     prestop_target = (
