@@ -72,7 +72,7 @@ HYUNDAI_SANTA_FE_FINAL_STOP_CAP_V = [-0.25, -0.30, -0.50, -0.90]
 
 # Use % of the calculated deceleration required to eliminate.
 # closing speed over the available distance.
-VOLKSWAGEN_TAOS_PRESTOP_REQUIRED_DECEL_GAIN = 1.3
+VOLKSWAGEN_TAOS_PRESTOP_REQUIRED_DECEL_GAIN = 1.0
 
 # Lead speed at which custom pre-braking is fully disabled (m/s).
 #VOLKSWAGEN_TAOS_PRESTOP_LEAD_SPEED_REF = 5.0
@@ -99,7 +99,7 @@ VOLKSWAGEN_TAOS_COMFORT_STOP_CAP_BP = [0.0, 1.0, 2.0, 3.5, 5.0, 7.0]
 #VOLKSWAGEN_TAOS_COMFORT_STOP_CAP_V = [-0.55, -0.86, -0.99, -1.65, -2.15, -2.45]
 #VOLKSWAGEN_TAOS_COMFORT_STOP_CAP_V = [-0.55, -0.96, -1.88, -2.25, -2.45, -2.58]
 #VOLKSWAGEN_TAOS_COMFORT_STOP_CAP_V = [-0.45, -0.50, -0.55, -0.65, -0.85, -0.95]
-VOLKSWAGEN_TAOS_COMFORT_STOP_CAP_V = [-0.55, -0.96, -1.58, -2.25, -2.45, -2.58]
+VOLKSWAGEN_TAOS_COMFORT_STOP_CAP_V = [-0.55, -1.68, -1.98, -2.28, -2.48, -2.58]
 
 def get_bolt_acc_pedal_friction_bias(output_accel, a_target, v_ego):
   if output_accel >= -0.05 or a_target >= -0.80 or v_ego <= 5.0:
