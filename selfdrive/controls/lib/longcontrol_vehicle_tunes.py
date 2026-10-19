@@ -72,7 +72,7 @@ HYUNDAI_SANTA_FE_FINAL_STOP_CAP_V = [-0.25, -0.30, -0.50, -0.90]
 
 # Use % of the calculated deceleration required to eliminate.
 # closing speed over the available distance.
-VOLKSWAGEN_TAOS_PRESTOP_REQUIRED_DECEL_GAIN = 1.3
+VOLKSWAGEN_TAOS_PRESTOP_REQUIRED_DECEL_GAIN = 1.35
 
 # Lead speed at which custom pre-braking is fully disabled (m/s).
 # VOLKSWAGEN_TAOS_PRESTOP_LEAD_SPEED_REF = 5.0
@@ -83,12 +83,12 @@ VOLKSWAGEN_TAOS_PRESTOP_MIN_GAP = 2.0
 
 # Additional following distance based on speed (seconds).
 # VOLKSWAGEN_TAOS_PRESTOP_TIME_GAP = 2.0
-VOLKSWAGEN_TAOS_PRESTOP_TIME_GAP = 1.2
+VOLKSWAGEN_TAOS_PRESTOP_TIME_GAP = 1.23
 VOLKSWAGEN_TAOS_PRESTOP_FOLLOW_TIME_GAP = 2.0
 
 # Maximum braking that the pre-stop layer itself may request.
 #VOLKSWAGEN_TAOS_PRESTOP_DECEL_LIMIT = -2.6
-VOLKSWAGEN_TAOS_PRESTOP_DECEL_LIMIT = -2.8
+VOLKSWAGEN_TAOS_PRESTOP_DECEL_LIMIT = -2.86
 
 # VOLKSWAGEN_TAOS_COMFORT_STOP
 VOLKSWAGEN_TAOS_COMFORT_STOP_CRAWL_SPEED = 0.5
