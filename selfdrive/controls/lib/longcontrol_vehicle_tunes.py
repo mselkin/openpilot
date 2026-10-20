@@ -101,7 +101,8 @@ VOLKSWAGEN_TAOS_COMFORT_STOP_CAP_BP = [0.0, 1.0, 2.0, 3.5, 5.0, 7.0]
 #VOLKSWAGEN_TAOS_COMFORT_STOP_CAP_V = [-0.55, -0.86, -0.99, -1.65, -2.15, -2.45]
 #VOLKSWAGEN_TAOS_COMFORT_STOP_CAP_V = [-0.55, -0.96, -1.88, -2.25, -2.45, -2.58]
 #VOLKSWAGEN_TAOS_COMFORT_STOP_CAP_V = [-0.45, -0.50, -0.55, -0.65, -0.85, -0.95]
-VOLKSWAGEN_TAOS_COMFORT_STOP_CAP_V = [-0.65, -1.98, -2.26, -2.28, -2.48, -2.58]
+#VOLKSWAGEN_TAOS_COMFORT_STOP_CAP_V = [-0.65, -1.98, -2.26, -2.28, -2.48, -2.58]
+VOLKSWAGEN_TAOS_COMFORT_STOP_CAP_V = [-0.65, -2.08, -2.23, -2.68, -2.78, -2.86]
 
 def get_bolt_acc_pedal_friction_bias(output_accel, a_target, v_ego):
   if output_accel >= -0.05 or a_target >= -0.80 or v_ego <= 5.0:
