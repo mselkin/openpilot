@@ -396,7 +396,8 @@ class UnifiedSpeedWidget(LayoutWidget):
 
     if presentation.confirmation_pending and limit_bounds is not None:
       intensity = (1.0 + math.sin(2.0 * math.pi * rl.get_time())) / 2.0
-      alpha = round(100 + 155 * intensity)
+      # alpha = round(100 + 155 * intensity)
+      alpha = round(255 * intensity)
       pulse = rl.Color(CONFIRMATION_COLOR.r, CONFIRMATION_COLOR.g, CONFIRMATION_COLOR.b, alpha)
       self._draw_speed_limit_border(rect, limit_bounds, pulse)
     else:
