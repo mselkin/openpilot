@@ -41,10 +41,7 @@ PAUSE_ICON_HEIGHT = 14
 PAUSE_ICON_GAP = 8
 OFFSET_FONT_SIZE = 22
 INLINE_OFFSET_FONT_SIZE = 28
-# CONFIRMATION_COLOR = rl.Color(188, 132, 255, 255)
 CONFIRMATION_COLOR = rl.Color(188, 132, 255, 255)
-PENDING_HIGHER_COLOR = rl.Color(255, 60, 60, 255)
-PENDING_LOWER_COLOR = rl.Color(60, 140, 255, 255)
 PAUSE_COLOR = rl.Color(UNIFIED_ACCENT.r, UNIFIED_ACCENT.g, UNIFIED_ACCENT.b, 255)
 
 
@@ -378,7 +375,23 @@ class UnifiedSpeedWidget(LayoutWidget):
       self._draw_header(header_bounds, "SPEED LIMIT", icon_key, label_color)
       if presentation.mode != "merged":
         value_y = limit_bounds.y + 66
-        value_size = self._draw_posted_limit(limit_bounds, value_y, speed_color, detail_color)
+        
+        # value_size = self._draw_posted_limit(limit_bounds, value_y, speed_color, detail_color)
+        # Pulse the speed limit number red while confirmation is pending.
+        value_color = speed_color
+
+        if presentation.confirmation_pending:
+          intensity = (1.0 + math.sin(2.0 * math.pi * rl.get_time())) / 2.0
+
+          value_color = rl.Color(
+            255,
+            round(255 - 195 * intensity),
+            round(255 - 195 * intensity),
+            255,
+          )
+
+        value_size = self._draw_posted_limit(limit_bounds, value_y, value_color, detail_color)
+
         if presentation.confirmation_pending:
           self._draw_centered_text(tr("PENDING"), limit_bounds, limit_bounds.y + 168, 25, CONFIRMATION_COLOR)
         unit_y = limit_bounds.y + limit_bounds.height - 42 if presentation.confirmation_pending else self._unit_y(value_y, value_size)
