@@ -24,6 +24,10 @@ TESLA_PEDAL_RELEASE_GUARD_MAX_DECEL = 0.35
 # Volkswagen Taos departure-gap threshold (metres)
 VOLKSWAGEN_TAOS_DEPARTURE_MIN_GAP = 2.0
 
+# Volkswagen Taos departure
+VOLKSWAGEN_TAOS_DEPARTURE_DISTANCE_GAIN = 0.15
+VOLKSWAGEN_TAOS_DEPARTURE_SPEED_GAIN = 0.40
+
 LongCtrlState = car.CarControl.Actuators.LongControlState
 
 def apply_deadzone(error, deadzone):
@@ -337,15 +341,11 @@ class LongControl:
           speed_error = lead_speed - ego_speed
 
           # Calculate proportional response.
-          distance_gain = 0.15
-          speed_gain = 0.40
-
           lead_accel = (
-            distance_gain * distance_error +
-            speed_gain * speed_error
+              VOLKSWAGEN_TAOS_DEPARTURE_DISTANCE_GAIN * distance_error +
+              VOLKSWAGEN_TAOS_DEPARTURE_SPEED_GAIN * speed_error
           )
 
-          # remove this line:
           # output_accel = starpilot_toggles.startAccel
           output_accel = clip(
             min(float(a_target), lead_accel),
