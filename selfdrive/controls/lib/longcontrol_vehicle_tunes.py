@@ -91,18 +91,21 @@ VOLKSWAGEN_TAOS_PRESTOP_FOLLOW_TIME_GAP = 2.0
 VOLKSWAGEN_TAOS_PRESTOP_DECEL_LIMIT = -2.86
 
 # VOLKSWAGEN_TAOS_COMFORT_STOP
-VOLKSWAGEN_TAOS_COMFORT_STOP_CRAWL_SPEED = 0.5
-VOLKSWAGEN_TAOS_COMFORT_STOP_CRAWL_DISTANCE = 3.0
-VOLKSWAGEN_TAOS_COMFORT_STOP_SOFTEN_SPEED_REF = 1.0
+#VOLKSWAGEN_TAOS_COMFORT_STOP_CRAWL_SPEED = 0.5
+#VOLKSWAGEN_TAOS_COMFORT_STOP_CRAWL_DISTANCE = 3.0
+#VOLKSWAGEN_TAOS_COMFORT_STOP_SOFTEN_SPEED_REF = 1.0
 
-VOLKSWAGEN_TAOS_COMFORT_STOP_CLOSING_SPEED_REF = 2.0
-VOLKSWAGEN_TAOS_COMFORT_STOP_SPEED_REF = 6.5
-VOLKSWAGEN_TAOS_COMFORT_STOP_CAP_BP = [0.0, 1.0, 2.0, 3.5, 5.0, 7.0]
+# Desired gap for the final-stop routine
+VOLKSWAGEN_TAOS_COMFORT_STOP_DESIRED_GAP = 2.0
+
+#VOLKSWAGEN_TAOS_COMFORT_STOP_CLOSING_SPEED_REF = 2.0
+#VOLKSWAGEN_TAOS_COMFORT_STOP_SPEED_REF = 6.5
+#VOLKSWAGEN_TAOS_COMFORT_STOP_CAP_BP = [0.0, 1.0, 2.0, 3.5, 5.0, 7.0]
 #VOLKSWAGEN_TAOS_COMFORT_STOP_CAP_V = [-0.55, -0.86, -0.99, -1.65, -2.15, -2.45]
 #VOLKSWAGEN_TAOS_COMFORT_STOP_CAP_V = [-0.55, -0.96, -1.88, -2.25, -2.45, -2.58]
 #VOLKSWAGEN_TAOS_COMFORT_STOP_CAP_V = [-0.45, -0.50, -0.55, -0.65, -0.85, -0.95]
 #VOLKSWAGEN_TAOS_COMFORT_STOP_CAP_V = [-0.65, -1.98, -2.26, -2.28, -2.48, -2.58]
-VOLKSWAGEN_TAOS_COMFORT_STOP_CAP_V = [-0.65, -2.08, -2.23, -2.68, -2.78, -2.86]
+#VOLKSWAGEN_TAOS_COMFORT_STOP_CAP_V = [-0.65, -2.08, -2.23, -2.68, -2.78, -2.86]
 
 def get_bolt_acc_pedal_friction_bias(output_accel, a_target, v_ego):
   if output_accel >= -0.05 or a_target >= -0.80 or v_ego <= 5.0:
@@ -275,157 +278,88 @@ class LongControlVehicleTuning:
 
     return departure_accel_cap
 
-  # TAOS Soften final braking
-  def shape_stopping_accel(self, output_accel, a_target, should_stop, v_ego, has_lead, stop_accel, leads=None):
-    """Brake firmly during should_stop, then progressively soften near zero speed."""
-    if (
+  # TAOS final braking for stop-and-go traffic
+  def shape_stopping_accel(self, output_accel, a_target, should_stop,
+                           v_ego, has_lead, stop_accel, leads=None):
+    """
+    Reduce closing speed before reaching the desired lead gap.
+    Preserve stronger existing braking and leave the final
+    standstill transition to LongControl.
+    """
+
+    if not (
       self.is_volkswagen_taos and
       should_stop and
       has_lead
     ):
-
-      comfort_lead = min(
-        (
-          lead for lead in (leads or ())
-          if bool(getattr(lead, "status", False)) and
-          abs(float(getattr(lead, "yRel", 0.0))) <= 1.75 and
-          float(getattr(lead, "dRel", 0.0)) > 0.0
-        ),
-        key=lambda lead: float(getattr(lead, "dRel", 0.0)),
-        default=None,
-      )
-
-      if comfort_lead is not None:
-        lead_distance = max(
-          0.1,
-          float(getattr(comfort_lead, "dRel", 0.0))
-        )
-
-        lead_speed = max(
-          0.0,
-          float(getattr(comfort_lead, "vLead", 0.0))
-        )
-
-        closing_speed = max(
-          0.0,
-          float(v_ego) - lead_speed
-        )
-
-        comfort_cap = float(interp(
-          v_ego,
-          VOLKSWAGEN_TAOS_COMFORT_STOP_CAP_BP,
-          VOLKSWAGEN_TAOS_COMFORT_STOP_CAP_V,
-        ))
-
-        # ----------------------------------------------------------
-        # CRAWL APPROACH
-        #
-        # Outside the crawl zone, shed most of the vehicle speed
-        # before entering the final low-speed portion of the stop.
-        # ----------------------------------------------------------
-
-        if (
-          lead_distance >
-          VOLKSWAGEN_TAOS_COMFORT_STOP_CRAWL_DISTANCE
-        ):
-          crawl_available_distance = (
-            lead_distance -
-            VOLKSWAGEN_TAOS_COMFORT_STOP_CRAWL_DISTANCE
-          )
-
-          crawl_speed = (
-            VOLKSWAGEN_TAOS_COMFORT_STOP_CRAWL_SPEED
-          )
-
-          crawl_required_decel = -max(
-            0.0,
-            (
-              float(v_ego) ** 2 -
-              crawl_speed ** 2
-            ) /
-            (2.0 * crawl_available_distance)
-          )
-
-          crawl_target = max(
-            VOLKSWAGEN_TAOS_PRESTOP_DECEL_LIMIT,
-            crawl_required_decel
-          )
-
-        else:
-          crawl_target = 0.0
-
-        # ----------------------------------------------------------
-        # CLOSING-SPEED CONTROL
-        # ----------------------------------------------------------
-
-        required_decel = -(
-          closing_speed ** 2 /
-          (2.0 * lead_distance)
-        )
-
-        physics_target = (
-          required_decel *
-          VOLKSWAGEN_TAOS_PRESTOP_REQUIRED_DECEL_GAIN
-        )
-
-        physics_target = max(
-          VOLKSWAGEN_TAOS_PRESTOP_DECEL_LIMIT,
-          physics_target
-        )
-
-        controlled_accel = min(
-          float(output_accel),
-          crawl_target,
-          physics_target
-        )
-
-        # ----------------------------------------------------------
-        # FINAL COMFORT SOFTENING
-        #
-        # Keep stronger braking until the vehicle is genuinely slow,
-        # then smoothly transition toward the comfort cap.
-        # ----------------------------------------------------------
-
-        closing_ratio = (
-          closing_speed /
-          VOLKSWAGEN_TAOS_COMFORT_STOP_CLOSING_SPEED_REF
-        )
-
-        closing_weight = 1.0 / (
-          1.0 + closing_ratio ** 4
-        )
-
-        soften_speed_ratio = (
-          float(v_ego) /
-          VOLKSWAGEN_TAOS_COMFORT_STOP_SOFTEN_SPEED_REF
-        )
-
-        speed_weight = 1.0 / (
-          1.0 + soften_speed_ratio ** 4
-        )
-
-        comfort_weight = (
-          closing_weight *
-          speed_weight
-        )
-
-        softened_accel = max(
-          controlled_accel,
-          comfort_cap
-        )
-
-        shaped_accel = (
-          controlled_accel * (1.0 - comfort_weight) +
-          softened_accel * comfort_weight
-        )
-
-        return shaped_accel
-
-    # Taos comfort shaping didn't apply.
-    # Preserve the planner's requested acceleration.
-    if self.is_volkswagen_taos:
       return output_accel
 
+    comfort_lead = min(
+      (
+        lead for lead in (leads or ())
+        if bool(getattr(lead, "status", False))
+        and abs(float(getattr(lead, "yRel", 0.0))) <= 1.75
+        and float(getattr(lead, "dRel", 0.0)) > 0.0
+      ),
+      key=lambda lead: float(lead.dRel),
+      default=None,
+    )
+
+    if comfort_lead is None:
+      return output_accel
+
+    lead_distance = float(comfort_lead.dRel)
+    lead_speed = max(
+      0.0,
+      float(getattr(comfort_lead, "vLead", 0.0))
+    )
+
+    closing_speed = max(
+      0.0,
+      float(v_ego) - lead_speed
+    )
+
+    if closing_speed <= 0.0:
+      return output_accel
+
+    # Preserve the desired 2-metre gap.
+    available_distance = (
+      lead_distance -
+      VOLKSWAGEN_TAOS_COMFORT_STOP_DESIRED_GAP
+    )
+
+    if available_distance <= 0.0:
+      return output_accel
+
+    # Target a very low closing speed before the final stop.
+    final_closing_speed = 0.2
+
+    if closing_speed <= final_closing_speed:
+      return output_accel
+
+    # Calculate braking required to shed closing speed.
+    required_decel = -(
+      (closing_speed ** 2 - final_closing_speed ** 2)
+      / (2.0 * available_distance)
+    )
+
+    physics_target = (
+      required_decel *
+      VOLKSWAGEN_TAOS_PRESTOP_REQUIRED_DECEL_GAIN
+    )
+
+    # Limit additional braking from this routine.
+    physics_target = max(
+      VOLKSWAGEN_TAOS_PRESTOP_DECEL_LIMIT,
+      physics_target
+    )
+
+    # Preserve stronger existing braking.
+    return min(
+      float(output_accel),
+      physics_target
+    )
+                             
     if (
       self.is_hyundai_elantra_2021 and
       should_stop and
