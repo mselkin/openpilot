@@ -346,7 +346,7 @@ class LongControl:
           )
 
           # remove this line:
-          #output_accel = starpilot_toggles.startAccel
+          # output_accel = starpilot_toggles.startAccel
           output_accel = clip(
             min(float(a_target), lead_accel),
             0.0,
