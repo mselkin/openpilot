@@ -89,6 +89,7 @@ VOLKSWAGEN_TAOS_PRESTOP_FOLLOW_TIME_GAP = 2.0
 # Maximum braking that the pre-stop layer itself may request.
 #VOLKSWAGEN_TAOS_PRESTOP_DECEL_LIMIT = -2.6
 VOLKSWAGEN_TAOS_PRESTOP_DECEL_LIMIT = -2.86
+#VOLKSWAGEN_TAOS_COMFORT_STOP_DECEL_LIMIT = -2.86
 
 # VOLKSWAGEN_TAOS_COMFORT_STOP
 #VOLKSWAGEN_TAOS_COMFORT_STOP_CRAWL_SPEED = 0.5
@@ -96,7 +97,8 @@ VOLKSWAGEN_TAOS_PRESTOP_DECEL_LIMIT = -2.86
 #VOLKSWAGEN_TAOS_COMFORT_STOP_SOFTEN_SPEED_REF = 1.0
 
 # Desired gap for the final-stop routine
-VOLKSWAGEN_TAOS_COMFORT_STOP_DESIRED_GAP = 2.0
+VOLKSWAGEN_TAOS_COMFORT_STOP_DESIRED_GAP = 1.5
+VOLKSWAGEN_TAOS_COMFORT_STOP_DECEL_LIMIT = -3.06
 
 #VOLKSWAGEN_TAOS_COMFORT_STOP_CLOSING_SPEED_REF = 2.0
 #VOLKSWAGEN_TAOS_COMFORT_STOP_SPEED_REF = 6.5
@@ -322,7 +324,7 @@ class LongControlVehicleTuning:
     if closing_speed <= 0.0:
       return output_accel
 
-    # Preserve the desired 2-metre gap.
+    # Preserve the desired gap.
     available_distance = (
       lead_distance -
       VOLKSWAGEN_TAOS_COMFORT_STOP_DESIRED_GAP
@@ -350,7 +352,7 @@ class LongControlVehicleTuning:
 
     # Limit additional braking from this routine.
     physics_target = max(
-      VOLKSWAGEN_TAOS_PRESTOP_DECEL_LIMIT,
+      VOLKSWAGEN_TAOS_COMFORT_STOP_DECEL_LIMIT,
       physics_target
     )
 
