@@ -98,7 +98,7 @@ VOLKSWAGEN_TAOS_PRESTOP_DECEL_LIMIT = -2.86
 
 # Desired gap for the final-stop routine
 VOLKSWAGEN_TAOS_COMFORT_STOP_DESIRED_GAP = 2.0
-VOLKSWAGEN_TAOS_COMFORT_STOP_DECEL_LIMIT = -3.06
+VOLKSWAGEN_TAOS_COMFORT_STOP_DECEL_LIMIT = -2.94
 
 #VOLKSWAGEN_TAOS_COMFORT_STOP_CLOSING_SPEED_REF = 2.0
 #VOLKSWAGEN_TAOS_COMFORT_STOP_SPEED_REF = 6.5
@@ -331,7 +331,8 @@ class LongControlVehicleTuning:
     )
 
     if available_distance <= 0.0:
-      return output_accel
+      # return output_accel
+      return VOLKSWAGEN_TAOS_COMFORT_STOP_DECEL_LIMIT
 
     # Target a very low closing speed before the final stop.
     final_closing_speed = 0.2
