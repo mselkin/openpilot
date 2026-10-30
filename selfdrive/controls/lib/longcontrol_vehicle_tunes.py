@@ -321,8 +321,8 @@ class LongControlVehicleTuning:
       float(v_ego) - lead_speed
     )
 
-    if closing_speed <= 0.0:
-      return output_accel
+    #if closing_speed <= 0.0:
+    #  return output_accel
 
     # Preserve the desired gap.
     available_distance = (
@@ -335,7 +335,8 @@ class LongControlVehicleTuning:
       return VOLKSWAGEN_TAOS_COMFORT_STOP_DECEL_LIMIT
 
     # Target a very low closing speed before the final stop.
-    final_closing_speed = 0.2
+    #final_closing_speed = 0.2
+    final_closing_speed = 0.14
 
     if closing_speed <= final_closing_speed:
       return output_accel
