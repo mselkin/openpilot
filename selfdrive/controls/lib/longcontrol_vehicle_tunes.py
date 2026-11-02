@@ -285,10 +285,10 @@ class LongControlVehicleTuning:
                            v_ego, has_lead, stop_accel, leads=None):
     """
     Taos stopping calculation.
-    Recalculate required braking from current lead data.
+    Calculate the deceleration required to reduce closing
+    speed to zero over the available stopping distance.
     Use previous acceleration only for a bounded release
-    toward the current target, rather than permanently
-    retaining the strongest historical braking command.
+    toward the current target.
     """
     if not (
       self.is_volkswagen_taos and
@@ -317,47 +317,43 @@ class LongControlVehicleTuning:
       float(getattr(comfort_lead, "vLead", 0.0))
     )
 
-    closing_speed = max(0.0, float(v_ego) - lead_speed)
-
-    available_distance = (
-      lead_distance -
-      VOLKSWAGEN_TAOS_COMFORT_STOP_DESIRED_GAP
+    closing_speed = max(
+      0.0,
+      float(v_ego) - lead_speed
     )
 
-    final_closing_speed = 0.14
+    available_distance = max(
+      0.1,
+      lead_distance - VOLKSWAGEN_TAOS_COMFORT_STOP_DESIRED_GAP
+    )
 
-    # Default stopping demand.
-    target_accel = float(stop_accel)
+    # Deceleration required to reduce closing speed to zero.
+    required_decel = -(
+      closing_speed ** 2
+      / (2.0 * available_distance)
+    )
 
-    if available_distance <= 0.0:
-      # No remaining distance allowance.
-      target_accel = VOLKSWAGEN_TAOS_COMFORT_STOP_DECEL_LIMIT
+    physics_target = (
+      required_decel *
+      VOLKSWAGEN_TAOS_PRESTOP_REQUIRED_DECEL_GAIN
+    )
 
-    elif closing_speed > final_closing_speed:
-      required_decel = -(
-        (closing_speed ** 2 - final_closing_speed ** 2)
-        / (2.0 * available_distance)
-      )
+    physics_target = max(
+      VOLKSWAGEN_TAOS_COMFORT_STOP_DECEL_LIMIT,
+      physics_target
+    )
 
-      physics_target = (
-        required_decel *
-        VOLKSWAGEN_TAOS_PRESTOP_REQUIRED_DECEL_GAIN
-      )
-
-      physics_target = max(
-        VOLKSWAGEN_TAOS_COMFORT_STOP_DECEL_LIMIT,
-        physics_target
-      )
-
-      target_accel = min(float(stop_accel), physics_target)
+    target_accel = min(
+      # float(stop_accel),
+      -0.55,
+      physics_target
+    )
 
     # Previous output is used only for smoothing.
     previous_accel = float(output_accel)
 
-    # Allow previously strong braking to recover gradually.
-    # Illustrative release rate, not a validated Taos value.
-    release_rate = 0.8  # m/s^3
-
+    # Limit how quickly braking is released.
+    release_rate = 0.8  # m/s³
     max_release_step = release_rate * DT_CTRL
 
     if target_accel > previous_accel:
@@ -366,10 +362,9 @@ class LongControlVehicleTuning:
         previous_accel + max_release_step
       )
 
-    # Stronger braking demand: return the newly calculated
-    # request. This path also needs jerk/safety validation.
+    # Apply stronger braking demand immediately.
     return target_accel
-                             
+                     
     if (
       self.is_hyundai_elantra_2021 and
       should_stop and
