@@ -74,6 +74,8 @@ HYUNDAI_SANTA_FE_FINAL_STOP_CAP_V = [-0.25, -0.30, -0.50, -0.90]
 # closing speed over the available distance.
 VOLKSWAGEN_TAOS_PRESTOP_REQUIRED_DECEL_GAIN = 1.35
 
+VOLKSWAGEN_TAOS_COMFORT_STOP_REQUIRED_DECEL_GAIN = 1.14
+
 # Lead speed at which custom pre-braking is fully disabled (m/s).
 # VOLKSWAGEN_TAOS_PRESTOP_LEAD_SPEED_REF = 5.0
 VOLKSWAGEN_TAOS_PRESTOP_LEAD_SPEED_REF = 6.67
@@ -335,7 +337,7 @@ class LongControlVehicleTuning:
 
     physics_target = (
       required_decel *
-      VOLKSWAGEN_TAOS_PRESTOP_REQUIRED_DECEL_GAIN
+      VOLKSWAGEN_TAOS_COMFORT_STOP_REQUIRED_DECEL_GAIN
     )
 
     physics_target = max(
