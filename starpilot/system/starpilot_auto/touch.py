@@ -28,7 +28,7 @@ MAX_INPUT_BYTES = 16 * 1024
 MAX_KEYCODES = 256
 DEFAULT_TOUCH_SOCKET = "/tmp/starpilot-auto-touch.sock"
 
-VERTICAL_TOUCH_OFFSET = 300  # Initial estimate; adjust after testing
+VERTICAL_TOUCH_OFFSET = 100  # Initial estimate; adjust after testing
 
 @dataclass(frozen=True)
 class TouchEvent:
@@ -97,7 +97,7 @@ class TouchMapper:
     nx = (vx - self.left) / self.content_width
     # ny = (vy - self.top) / self.content_height
     # Shift the registered touch upward
-    ny = (vy - self.top - VERTICAL_TOUCH_OFFSET) / self.content_height
+    ny = (vy - self.top + VERTICAL_TOUCH_OFFSET) / self.content_height
     return min(max(nx, 0.0), 1.0), min(max(ny, 0.0), 1.0)
 
   def _inside(self, x: int, y: int) -> bool:
