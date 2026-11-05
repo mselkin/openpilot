@@ -28,7 +28,7 @@ MAX_INPUT_BYTES = 16 * 1024
 MAX_KEYCODES = 256
 DEFAULT_TOUCH_SOCKET = "/tmp/starpilot-auto-touch.sock"
 
-VERTICAL_TOUCH_OFFSET = 60  # Initial estimate; adjust after testing
+VERTICAL_TOUCH_OFFSET = 300  # Initial estimate; adjust after testing
 
 @dataclass(frozen=True)
 class TouchEvent:
