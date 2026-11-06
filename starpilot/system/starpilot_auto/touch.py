@@ -137,17 +137,17 @@ class TouchMapper:
       return []
     events: list[TouchEvent] = []
     
-    #if action == ACTION_PRESS and self.pointer is None:
-    #  pointer, x, y = locations[0]
-    #  if self._inside(x, y):
-    #    self.pointer = pointer
-    #    events.append(TouchEvent("down", *self._normalize(x, y)))
-
-
     if action == ACTION_PRESS and self.pointer is None:
       pointer, x, y = locations[0]
-      self.pointer = pointer
-      events.append(TouchEvent("down", *self._normalize(x, y)))
+      if self._inside(x, y):
+        self.pointer = pointer
+        events.append(TouchEvent("down", *self._normalize(x, y)))
+
+
+    #if action == ACTION_PRESS and self.pointer is None:
+    #  pointer, x, y = locations[0]
+    #  self.pointer = pointer
+    #  events.append(TouchEvent("down", *self._normalize(x, y)))
 
   
     elif self.pointer is not None:
