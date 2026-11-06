@@ -987,6 +987,10 @@ def run(frames_path: str, touch_path: str) -> int:
   # without a window it would stay at 0,0, so report the car touch position instead.
   rl.get_mouse_position = lambda: rl.Vector2(touch.pos.x, touch.pos.y)
   receiver = TouchReceiver(touch_path)
+  # Temporary touchscreen calibration overlay (disable after calibration).
+  show_touch_calibration = True
+  calibration_touch_down = False
+  calibration_x = calibration_y = 0.0
   stats = RenderStats(time.monotonic())
   sampler = None
   from openpilot.starpilot.system.starpilot_auto import identity as identity_store
@@ -1076,7 +1080,15 @@ def run(frames_path: str, touch_path: str) -> int:
       # Last frame's status-column bookmark slot, if the column drew one.
       controls.bookmark_button = main_layout._dev_sidebar.bookmark_rect if started and not controls.full_screen(started) else None
       main_layout._dev_sidebar.bookmark_rect = None  # set again only if the column draws the slot this frame
-      layout_events, menu_events = controls.route(receiver.drain(), touch, started, viewport)
+      touch_events = receiver.drain()
+      # Track raw normalized positions independently of UI touch-routing permissions.
+      for event in touch_events:
+        if event.kind in ("down", "move"):
+          calibration_x, calibration_y = event.x, event.y
+          calibration_touch_down = True
+        elif event.kind in ("up", "cancel"):
+          calibration_touch_down = False
+      layout_events, menu_events = controls.route(touch_events, touch, started, viewport)
       settings = car_settings.poll()
       main_layout._dev_sidebar.metric_override = [STATUS_METRICS[slot][0] for slot in settings["status_slots"]]
       main_rect, map_rect = car_layout(settings, started, controls.full_screen(started), logical_w, logical_h)
@@ -1143,6 +1155,12 @@ def run(frames_path: str, touch_path: str) -> int:
         controls.menu.render(viewport)
       mark = time.monotonic()
       stats.add("menu_ms", mark - menu_began)
+      # Already inside the logical-to-visible scale transform: use logical pixels.
+      if show_touch_calibration and calibration_touch_down:
+        cx = int(calibration_x * logical_w)
+        cy = int(calibration_y * logical_h)
+        rl.draw_circle(cx, cy, 20, rl.RED)
+        rl.draw_circle_lines(cx, cy, 20, rl.WHITE)
       rl.rl_pop_matrix()
       rl.end_texture_mode()
       if output is not None:
