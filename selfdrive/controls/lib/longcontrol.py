@@ -266,8 +266,11 @@ class LongControl:
     positive_cap = interp(a_target, [-1.5, -0.6, -0.1], [0.0, 0.0, 0.05])
     return min(output_accel, float(positive_cap))
 
+  #def update(self, active, CS, a_target, should_stop, accel_limits, starpilot_toggles, has_lead=False,
+  #           traffic_mode_enabled=False, profile_max_accel=0.0, pedal_override=False, leads=None):
   def update(self, active, CS, a_target, should_stop, accel_limits, starpilot_toggles, has_lead=False,
-             traffic_mode_enabled=False, profile_max_accel=0.0, pedal_override=False, leads=None):
+             traffic_mode_enabled=False, profile_max_accel=0.0, pedal_override=False, leads=None,
+             forcing_stop=False, force_stop_distance=None):
     """Update longitudinal control. This updates the state machine and runs a PID loop"""
     self.pid.neg_limit = accel_limits[0]
     self.pid.pos_limit = accel_limits[1]
@@ -295,17 +298,68 @@ class LongControl:
       self.reset()
       output_accel = 0.
 
+    #elif self.long_control_state == LongCtrlState.stopping:
+    #  output_accel = self.last_output_accel
+    #  if output_accel > starpilot_toggles.stopAccel:
+    #    output_accel = min(output_accel, 0.0)
+    #    output_accel -= starpilot_toggles.stoppingDecelRate * DT_CTRL
+    #  output_accel = self.vehicle_tuning.shape_stopping_accel(
+    #    output_accel, a_target, should_stop, CS.vEgo, has_lead, starpilot_toggles.stopAccel, leads=leads,
+    #  )
+    #  output_accel = self._apply_moving_stop_target_follow(output_accel, a_target, should_stop, CS, starpilot_toggles)
+    #  self.reset(preserve_stop_release=True)
+    
     elif self.long_control_state == LongCtrlState.stopping:
       output_accel = self.last_output_accel
-      if output_accel > starpilot_toggles.stopAccel:
-        output_accel = min(output_accel, 0.0)
-        output_accel -= starpilot_toggles.stoppingDecelRate * DT_CTRL
-      output_accel = self.vehicle_tuning.shape_stopping_accel(
-        output_accel, a_target, should_stop, CS.vEgo, has_lead, starpilot_toggles.stopAccel, leads=leads,
-      )
-      output_accel = self._apply_moving_stop_target_follow(output_accel, a_target, should_stop, CS, starpilot_toggles)
-      self.reset(preserve_stop_release=True)
 
+      # Identify a valid real lead using the same checks
+      # as the existing Taos stopping routine.
+      taos_valid_lead = self.vehicle_tuning.is_volkswagen_taos and any(
+        bool(getattr(lead, "status", False))
+        and abs(float(getattr(lead, "yRel", 0.0))) <= 1.75
+        and float(getattr(lead, "dRel", 0.0)) > 0.0
+        for lead in (leads or ())
+      )
+
+      # Select the new Force Stop path only for the Taos,
+      # with an active Force Stop and no valid real lead.
+      taos_force_stop = (
+        self.vehicle_tuning.is_volkswagen_taos
+        and bool(forcing_stop)
+        and force_stop_distance is not None
+        and not taos_valid_lead
+      )
+
+      # Preserve the existing stopping ramp where the
+      # Force Stop routine is not selected.
+      if not taos_force_stop:
+        if output_accel > starpilot_toggles.stopAccel:
+          output_accel = min(output_accel, 0.0)
+          output_accel -= starpilot_toggles.stoppingDecelRate * DT_CTRL
+
+      if taos_force_stop:
+        # Separate Taos Force Stop stopping calculation.
+        output_accel = self.vehicle_tuning.shape_force_stop_accel(
+          output_accel,
+          a_target,
+          should_stop,
+          CS.vEgo,
+          starpilot_toggles.stopAccel,
+          force_stop_distance=force_stop_distance,
+        )
+      else:
+        # Existing lead-vehicle stopping routine, unchanged.
+        output_accel = self.vehicle_tuning.shape_stopping_accel(
+          output_accel, a_target, should_stop, CS.vEgo,
+          has_lead, starpilot_toggles.stopAccel, leads=leads,
+        )
+
+      output_accel = self._apply_moving_stop_target_follow(
+        output_accel, a_target, should_stop, CS, starpilot_toggles
+      )
+
+      self.reset(preserve_stop_release=True)
+      
     elif self.long_control_state == LongCtrlState.starting:
       if traffic_mode_enabled:
         # Traffic Mode has its own soft launch curve (a_target); bypass the raw
