@@ -46,6 +46,11 @@ from openpilot.selfdrive.locationd.helpers import PoseCalibrator, Pose
 from openpilot.starpilot.common.starpilot_variables import get_starpilot_toggles
 from openpilot.starpilot.controls.lib.neural_network_feedforward import LatControlNNFF
 
+from openpilot.starpilot.controls.lib.starpilot_vcruise import (
+  OFFSET_FT_MIN,
+  OFFSET_FT_MAX,
+)
+
 State = log.SelfdriveState.OpenpilotState
 LaneChangeState = log.LaneChangeState
 LaneChangeDirection = log.LaneChangeDirection
@@ -588,11 +593,25 @@ class Controls:
                                                 pedal_override=tesla_pedal_override,
                                                 leads=(self.sm['radarState'].leadOne, self.sm['radarState'].leadTwo),
                                                 forcing_stop=bool(self.sm['starpilotPlan'].forcingStop),
+                                                #force_stop_distance=(
+                                                #  float(self.sm['starpilotPlan'].forcingStopLength)
+                                                #  if self.sm['starpilotPlan'].forcingStop
+                                                #  else None
+                                                #)),
+
                                                 force_stop_distance=(
                                                   float(self.sm['starpilotPlan'].forcingStopLength)
+                                                  + max(
+                                                      OFFSET_FT_MIN,
+                                                      min(
+                                                        OFFSET_FT_MAX,
+                                                        int(self.starpilot_toggles.force_stop_distance_offset or 0)
+                                                      )
+                                                    ) * 0.3048
                                                   if self.sm['starpilotPlan'].forcingStop
                                                   else None
                                                 )),
+                                                
                                 self.starpilot_toggles.max_desired_acceleration))
 
 
