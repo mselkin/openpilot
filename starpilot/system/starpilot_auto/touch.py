@@ -28,7 +28,7 @@ MAX_INPUT_BYTES = 16 * 1024
 MAX_KEYCODES = 256
 DEFAULT_TOUCH_SOCKET = "/tmp/starpilot-auto-touch.sock"
 
-VERTICAL_TOUCH_OFFSET = 100  # Initial estimate; adjust after testing
+VERTICAL_TOUCH_OFFSET = 90  # Initial estimate; adjust after testing
 
 @dataclass(frozen=True)
 class TouchEvent:
@@ -91,19 +91,26 @@ class TouchMapper:
     self.content_width, self.content_height = video_width - margin_width, video_height - margin_height
     self.pointer: int | None = None
 
-  def _normalize(self, x: int, y: int) -> tuple[float, float]:
+  def _calibrated(self, x: int, y: int) -> tuple[float, float]:
     vx = x * self.video_width / self.touch_width
     vy = y * self.video_height / self.touch_height
     nx = (vx - self.left) / self.content_width
-    # ny = (vy - self.top) / self.content_height
-    # Shift the registered touch upward
     ny = (vy - self.top + VERTICAL_TOUCH_OFFSET) / self.content_height
-    return min(max(nx, 0.0), 1.0), min(max(ny, 0.0), 1.0)
+    return nx, ny
+
+  def _normalize(self, x: int, y: int) -> tuple[float, float]:
+    nx, ny = self._calibrated(x, y)
+    return (
+      min(max(nx, 0.0), 1.0),
+      min(max(ny, 0.0), 1.0),
+    )
 
   def _inside(self, x: int, y: int) -> bool:
-    vx = x * self.video_width / self.touch_width
-    vy = y * self.video_height / self.touch_height
-    return self.left <= vx < self.left + self.content_width and self.top <= vy < self.top + self.content_height
+    nx, ny = self._calibrated(x, y)
+    return (
+      0.0 <= nx < 1.0
+      and 0.0 <= ny < 1.0
+    )
 
   def reset(self) -> list[TouchEvent]:
     """Focus loss or session end: withdraw a held touch rather than clicking."""
