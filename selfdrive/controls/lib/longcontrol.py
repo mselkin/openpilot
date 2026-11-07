@@ -330,13 +330,6 @@ class LongControl:
         and not taos_valid_lead
       )
 
-      # Preserve the existing stopping ramp where the
-      # Force Stop routine is not selected.
-      if not taos_force_stop:
-        if output_accel > starpilot_toggles.stopAccel:
-          output_accel = min(output_accel, 0.0)
-          output_accel -= starpilot_toggles.stoppingDecelRate * DT_CTRL
-
       if taos_force_stop:
         # Separate Taos Force Stop stopping calculation.
         output_accel = self.vehicle_tuning.shape_force_stop_accel(
@@ -348,6 +341,11 @@ class LongControl:
           force_stop_distance=force_stop_distance,
         )
       else:
+        # Preserve the original stopping ramp outside the Taos Force Stop path.
+        if output_accel > starpilot_toggles.stopAccel:
+          output_accel = min(output_accel, 0.0)
+          output_accel -= starpilot_toggles.stoppingDecelRate * DT_CTRL
+
         # Existing lead-vehicle stopping routine, unchanged.
         output_accel = self.vehicle_tuning.shape_stopping_accel(
           output_accel, a_target, should_stop, CS.vEgo,
@@ -476,6 +474,13 @@ class LongControl:
 
       raw_output_accel = self.vehicle_tuning.cap_volkswagen_taos_prestop_output(
         raw_output_accel, CS.vEgo, should_stop, leads,
+      )
+
+      raw_output_accel = self.vehicle_tuning.cap_force_stop_prestop_output(
+        raw_output_accel,
+        CS.vEgo,
+        forcing_stop,
+        force_stop_distance,
       )
 
       if leaving_experimental:
