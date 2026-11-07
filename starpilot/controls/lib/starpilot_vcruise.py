@@ -651,9 +651,12 @@ class StarPilotVCruise:
     self.nav_turn_target = self._get_nav_turn_control_target(v_cruise, sm, starpilot_toggles)
 
     # Single tuning knob (signed feet -> meters). Defense clamp on top of UI bounds.
-    offset_ft_raw = int(getattr(starpilot_toggles, 'force_stop_distance_offset', 0) or 0)
-    offset_ft = max(OFFSET_FT_MIN, min(OFFSET_FT_MAX, offset_ft_raw))
-    offset_m = offset_ft * FT_TO_M
+    #offset_ft_raw = int(getattr(starpilot_toggles, 'force_stop_distance_offset', 0) or 0)
+    #offset_ft = max(OFFSET_FT_MIN, min(OFFSET_FT_MAX, offset_ft_raw))
+    #offset_m = offset_ft * FT_TO_M
+    # Force Stop Offset stored directly in metres.
+    offset_m_raw = int(getattr(starpilot_toggles, 'force_stop_distance_offset', 0) or 0)
+    offset_m = max(-6, min(6, offset_m_raw))
 
     # cleared on every path; only the far-approach envelope below republishes it
     self.approach_stop_length = 0.0
