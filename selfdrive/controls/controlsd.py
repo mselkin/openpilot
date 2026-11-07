@@ -46,10 +46,12 @@ from openpilot.selfdrive.locationd.helpers import PoseCalibrator, Pose
 from openpilot.starpilot.common.starpilot_variables import get_starpilot_toggles
 from openpilot.starpilot.controls.lib.neural_network_feedforward import LatControlNNFF
 
-from openpilot.starpilot.controls.lib.starpilot_vcruise import (
-  OFFSET_FT_MIN,
-  OFFSET_FT_MAX,
-)
+#from openpilot.starpilot.controls.lib.starpilot_vcruise import (
+#  OFFSET_FT_MIN,
+#  OFFSET_FT_MAX,
+#)
+OFFSET_M_MIN = -6.0
+OFFSET_M_MAX = 6.0
 
 State = log.SelfdriveState.OpenpilotState
 LaneChangeState = log.LaneChangeState
@@ -601,7 +603,13 @@ class Controls:
 
                                                 force_stop_distance=(
                                                   float(self.sm['starpilotPlan'].forcingStopLength)
-                                                  + float(self.starpilot_toggles.force_stop_distance_offset or 0)
+                                                  + max(
+                                                      OFFSET_M_MIN,
+                                                      min(
+                                                        OFFSET_M_MAX,
+                                                        float(self.starpilot_toggles.force_stop_distance_offset or 0.0)
+                                                      )
+                                                    )
                                                   if self.sm['starpilotPlan'].forcingStop
                                                   else None
                                                 )),
