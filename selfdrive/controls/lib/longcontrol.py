@@ -429,6 +429,12 @@ class LongControl:
       a_target = self.vehicle_tuning.shape_volkswagen_taos_prestop_target(
         a_target, CS.vEgo, should_stop, leads,
       )
+      a_target = self.vehicle_tuning.shape_force_stop_prestop_target(
+        a_target,
+        CS.vEgo,
+        forcing_stop,
+        force_stop_distance,
+      )
       error = a_target - CS.aEgo
       self.update_mpc_mode(self.experimental_mode)
       self.vehicle_tuning.shape_volt_test_tune_integrator(self.pid, error, CS.vEgo)
