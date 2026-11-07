@@ -369,7 +369,7 @@ class LongControlVehicleTuning:
 
     # Apply stronger braking demand immediately.
     return target_accel
-  #                             
+                                                     
   def shape_force_stop_prestop_target(
       self,
       a_target,
@@ -425,76 +425,77 @@ class LongControlVehicleTuning:
     # Record physics_target alongside a_target,
     # v_ego and distance during replay.
     return physics_target
-  
-    # TAOS final braking for Force Stop virtual targets
-    def shape_force_stop_accel(self, output_accel, a_target, should_stop,
-                               v_ego, stop_accel, force_stop_distance=None):
-      """
-      Taos Force Stop stopping calculation.
-      Uses the same braking mathematics and settings as
-      shape_stopping_accel(), but for a stationary target.
-      """
-      if not (
-        self.is_volkswagen_taos and
-        should_stop and
-        force_stop_distance is not None
-      ):
-        return output_accel
+    
+  #  
+  # TAOS final braking for Force Stop virtual targets
+  def shape_force_stop_accel(self, output_accel, a_target, should_stop,
+                             v_ego, stop_accel, force_stop_distance=None):
+    """
+    Taos Force Stop stopping calculation.
+    Uses the same braking mathematics and settings as
+    shape_stopping_accel(), but for a stationary target.
+    """
+    if not (
+      self.is_volkswagen_taos and
+      should_stop and
+      force_stop_distance is not None
+    ):
+      return output_accel
 
-      stop_distance = float(force_stop_distance)
+    stop_distance = float(force_stop_distance)
 
-      if not np.isfinite(stop_distance) or stop_distance <= 0.0:
-        return output_accel
+    if not np.isfinite(stop_distance) or stop_distance <= 0.0:
+      return output_accel
 
-      lead_speed = 0.0
+    lead_speed = 0.0
 
-      closing_speed = max(
-        0.0,
-        float(v_ego) - lead_speed
+    closing_speed = max(
+      0.0,
+      float(v_ego) - lead_speed
+    )
+
+    available_distance = max(
+      0.1,
+      stop_distance
+    )
+
+    # Deceleration required to reduce closing speed to zero.
+    required_decel = -(
+      closing_speed ** 2
+      / (2.0 * available_distance)
+    )
+
+    physics_target = (
+      required_decel *
+      VOLKSWAGEN_TAOS_COMFORT_STOP_REQUIRED_DECEL_GAIN
+    )
+
+    physics_target = max(
+      VOLKSWAGEN_TAOS_COMFORT_STOP_DECEL_LIMIT,
+      physics_target
+    )
+
+    target_accel = min(
+      # float(stop_accel),
+      -0.55,
+      physics_target
+    )
+
+    # Previous output is used only for smoothing.
+    previous_accel = float(output_accel)
+
+    # Limit how quickly braking is released.
+    release_rate = 0.8  # m/s³
+    max_release_step = release_rate * DT_CTRL
+
+    if target_accel > previous_accel:
+      return min(
+        target_accel,
+        previous_accel + max_release_step
       )
 
-      available_distance = max(
-        0.1,
-        stop_distance
-      )
-
-      # Deceleration required to reduce closing speed to zero.
-      required_decel = -(
-        closing_speed ** 2
-        / (2.0 * available_distance)
-      )
-
-      physics_target = (
-        required_decel *
-        VOLKSWAGEN_TAOS_COMFORT_STOP_REQUIRED_DECEL_GAIN
-      )
-
-      physics_target = max(
-        VOLKSWAGEN_TAOS_COMFORT_STOP_DECEL_LIMIT,
-        physics_target
-      )
-
-      target_accel = min(
-        # float(stop_accel),
-        -0.55,
-        physics_target
-      )
-
-      # Previous output is used only for smoothing.
-      previous_accel = float(output_accel)
-
-      # Limit how quickly braking is released.
-      release_rate = 0.8  # m/s³
-      max_release_step = release_rate * DT_CTRL
-
-      if target_accel > previous_accel:
-        return min(
-          target_accel,
-          previous_accel + max_release_step
-        )
-
-      # Apply stronger braking demand immediately.
-      return target_accel
+    # Apply stronger braking demand immediately.
+    return target_accel
                                                      
     if (
       self.is_hyundai_elantra_2021 and
