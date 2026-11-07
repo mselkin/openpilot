@@ -369,132 +369,132 @@ class LongControlVehicleTuning:
 
     # Apply stronger braking demand immediately.
     return target_accel
-
-def shape_force_stop_prestop_target(
-    self,
-    a_target,
-    v_ego,
-    forcing_stop,
-    force_stop_distance=None,
-):
-  """
-  Diagnostic Taos Force Stop pre-stop calculation.
-
-  Calculate the deceleration needed to stop over the
-  supplied distance, independently of should_stop.
-
-  Does not modify the acceleration target until the
-  distance estimate has been validated.
-  """
-  if not (
-    self.is_volkswagen_taos
-    and forcing_stop
-    and force_stop_distance is not None
+  #                             
+  def shape_force_stop_prestop_target(
+      self,
+      a_target,
+      v_ego,
+      forcing_stop,
+      force_stop_distance=None,
   ):
-    return a_target
-
-  distance = float(force_stop_distance)
-  speed = max(0.0, float(v_ego))
-
-  if not np.isfinite(distance) or not np.isfinite(speed):
-    return a_target
-
-  if distance <= 0.0:
-    # Distance exhausted while still moving.
-    # Flag this in diagnostics rather than silently
-    # treating it as a valid stopping distance.
-    return a_target
-
-  available_distance = max(0.1, distance)
-
-  required_decel = -(
-    speed ** 2 / (2.0 * available_distance)
-  )
-
-  physics_target = (
-    required_decel
-    * VOLKSWAGEN_TAOS_COMFORT_STOP_REQUIRED_DECEL_GAIN
-  )
-
-  physics_target = max(
-    VOLKSWAGEN_TAOS_COMFORT_STOP_DECEL_LIMIT,
-    physics_target,
-  )
-
-  # Diagnostic only.
-  # Record physics_target alongside a_target,
-  # v_ego and distance during replay.
-  return physics_target
-  
-  # TAOS final braking for Force Stop virtual targets
-  def shape_force_stop_accel(self, output_accel, a_target, should_stop,
-                             v_ego, stop_accel, force_stop_distance=None):
     """
-    Taos Force Stop stopping calculation.
-    Uses the same braking mathematics and settings as
-    shape_stopping_accel(), but for a stationary target.
+    Diagnostic Taos Force Stop pre-stop calculation.
+
+    Calculate the deceleration needed to stop over the
+    supplied distance, independently of should_stop.
+
+    Does not modify the acceleration target until the
+    distance estimate has been validated.
     """
     if not (
-      self.is_volkswagen_taos and
-      should_stop and
-      force_stop_distance is not None
+      self.is_volkswagen_taos
+      and forcing_stop
+      and force_stop_distance is not None
     ):
-      return output_accel
+      return a_target
 
-    stop_distance = float(force_stop_distance)
+    distance = float(force_stop_distance)
+    speed = max(0.0, float(v_ego))
 
-    if not np.isfinite(stop_distance) or stop_distance <= 0.0:
-      return output_accel
+    if not np.isfinite(distance) or not np.isfinite(speed):
+      return a_target
 
-    lead_speed = 0.0
+    if distance <= 0.0:
+      # Distance exhausted while still moving.
+      # Flag this in diagnostics rather than silently
+      # treating it as a valid stopping distance.
+      return a_target
 
-    closing_speed = max(
-      0.0,
-      float(v_ego) - lead_speed
-    )
+    available_distance = max(0.1, distance)
 
-    available_distance = max(
-      0.1,
-      stop_distance
-    )
-
-    # Deceleration required to reduce closing speed to zero.
     required_decel = -(
-      closing_speed ** 2
-      / (2.0 * available_distance)
+      speed ** 2 / (2.0 * available_distance)
     )
 
     physics_target = (
-      required_decel *
-      VOLKSWAGEN_TAOS_COMFORT_STOP_REQUIRED_DECEL_GAIN
+      required_decel
+      * VOLKSWAGEN_TAOS_COMFORT_STOP_REQUIRED_DECEL_GAIN
     )
 
     physics_target = max(
       VOLKSWAGEN_TAOS_COMFORT_STOP_DECEL_LIMIT,
-      physics_target
+      physics_target,
     )
 
-    target_accel = min(
-      # float(stop_accel),
-      -0.55,
-      physics_target
-    )
+    # Diagnostic only.
+    # Record physics_target alongside a_target,
+    # v_ego and distance during replay.
+    return physics_target
+  
+    # TAOS final braking for Force Stop virtual targets
+    def shape_force_stop_accel(self, output_accel, a_target, should_stop,
+                               v_ego, stop_accel, force_stop_distance=None):
+      """
+      Taos Force Stop stopping calculation.
+      Uses the same braking mathematics and settings as
+      shape_stopping_accel(), but for a stationary target.
+      """
+      if not (
+        self.is_volkswagen_taos and
+        should_stop and
+        force_stop_distance is not None
+      ):
+        return output_accel
 
-    # Previous output is used only for smoothing.
-    previous_accel = float(output_accel)
+      stop_distance = float(force_stop_distance)
 
-    # Limit how quickly braking is released.
-    release_rate = 0.8  # m/s³
-    max_release_step = release_rate * DT_CTRL
+      if not np.isfinite(stop_distance) or stop_distance <= 0.0:
+        return output_accel
 
-    if target_accel > previous_accel:
-      return min(
-        target_accel,
-        previous_accel + max_release_step
+      lead_speed = 0.0
+
+      closing_speed = max(
+        0.0,
+        float(v_ego) - lead_speed
       )
 
-    # Apply stronger braking demand immediately.
-    return target_accel
+      available_distance = max(
+        0.1,
+        stop_distance
+      )
+
+      # Deceleration required to reduce closing speed to zero.
+      required_decel = -(
+        closing_speed ** 2
+        / (2.0 * available_distance)
+      )
+
+      physics_target = (
+        required_decel *
+        VOLKSWAGEN_TAOS_COMFORT_STOP_REQUIRED_DECEL_GAIN
+      )
+
+      physics_target = max(
+        VOLKSWAGEN_TAOS_COMFORT_STOP_DECEL_LIMIT,
+        physics_target
+      )
+
+      target_accel = min(
+        # float(stop_accel),
+        -0.55,
+        physics_target
+      )
+
+      # Previous output is used only for smoothing.
+      previous_accel = float(output_accel)
+
+      # Limit how quickly braking is released.
+      release_rate = 0.8  # m/s³
+      max_release_step = release_rate * DT_CTRL
+
+      if target_accel > previous_accel:
+        return min(
+          target_accel,
+          previous_accel + max_release_step
+        )
+
+      # Apply stronger braking demand immediately.
+      return target_accel
                                                      
     if (
       self.is_hyundai_elantra_2021 and
