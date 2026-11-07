@@ -397,13 +397,15 @@ class LongControlVehicleTuning:
     speed = max(0.0, float(v_ego))
 
     if not np.isfinite(distance) or not np.isfinite(speed):
-      return a_target
+      # return a_target
+      return -0.55
 
     if distance <= 0.0:
       # Distance exhausted while still moving.
       # Flag this in diagnostics rather than silently
       # treating it as a valid stopping distance.
-      return a_target
+      # return a_target
+      return -0.55
 
     available_distance = max(0.1, distance)
 
@@ -444,7 +446,8 @@ class LongControlVehicleTuning:
     stop_distance = float(force_stop_distance)
 
     if not np.isfinite(stop_distance) or stop_distance <= 0.0:
-      return output_accel
+      # return output_accel
+      return -0.55
 
     lead_speed = 0.0
 
