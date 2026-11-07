@@ -426,8 +426,6 @@ class LongControlVehicleTuning:
     # v_ego and distance during replay.
     return physics_target
 
-    
-  #  
   # TAOS final braking for Force Stop virtual targets
   def shape_force_stop_accel(self, output_accel, a_target, should_stop,
                              v_ego, stop_accel, force_stop_distance=None):
@@ -497,37 +495,7 @@ class LongControlVehicleTuning:
 
     # Apply stronger braking demand immediately.
     return target_accel
-                                                     
-    if (
-      self.is_hyundai_elantra_2021 and
-      should_stop and
-      not has_lead and
-      v_ego < HYUNDAI_ELANTRA_FINAL_STOP_MAX_SPEED and
-      a_target <= 0.1
-    ):
-      final_stop_cap = float(interp(
-        v_ego,
-        HYUNDAI_ELANTRA_FINAL_STOP_CAP_BP,
-        HYUNDAI_ELANTRA_FINAL_STOP_CAP_V,
-      ))
-      if a_target > final_stop_cap - HYUNDAI_ELANTRA_FINAL_STOP_URGENCY_MARGIN:
-        return max(float(output_accel), final_stop_cap)
-
-    if (
-      self.is_hyundai_santa_fe_2022 and
-      v_ego <= HYUNDAI_SANTA_FE_FINAL_STOP_MAX_SPEED and
-      a_target <= 0.1
-    ):
-      final_stop_cap = float(interp(v_ego, HYUNDAI_SANTA_FE_FINAL_STOP_CAP_BP, HYUNDAI_SANTA_FE_FINAL_STOP_CAP_V))
-      return max(float(output_accel), final_stop_cap)
-
-    if (
-      not self.is_hyundai_elantra_2021 or
-      not has_lead or not should_stop or v_ego > 2.0 or
-      a_target <= stop_accel - HYUNDAI_ELANTRA_STOPPING_HOLD_TARGET_GAP
-    ):
-      return output_accel
-    return max(float(output_accel), float(stop_accel))
+    # return max(float(output_accel), float(stop_accel))
 
   # TAOS Prebraking
   def shape_volkswagen_taos_prestop_target(self, a_target, v_ego, should_stop, leads=None):
