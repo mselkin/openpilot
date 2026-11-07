@@ -46,9 +46,9 @@ from openpilot.selfdrive.locationd.helpers import PoseCalibrator, Pose
 from openpilot.starpilot.common.starpilot_variables import get_starpilot_toggles
 from openpilot.starpilot.controls.lib.neural_network_feedforward import LatControlNNFF
 
-# OFFSET_M_MIN = -6.0
-# OFFSET_M_MAX = 6.0
-from openpilot.starpilot.controls.lib.starpilot_vcruise import OFFSET_M_MIN, OFFSET_M_MAX
+# from openpilot.starpilot.controls.lib.starpilot_vcruise import OFFSET_M_MIN, OFFSET_M_MAX
+OFFSET_M_MIN = -6.0
+OFFSET_M_MAX = 6.0
 
 State = log.SelfdriveState.OpenpilotState
 LaneChangeState = log.LaneChangeState
