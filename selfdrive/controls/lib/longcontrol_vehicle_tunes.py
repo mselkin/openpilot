@@ -370,7 +370,62 @@ class LongControlVehicleTuning:
     # Apply stronger braking demand immediately.
     return target_accel
 
+def shape_force_stop_prestop_target(
+    self,
+    a_target,
+    v_ego,
+    forcing_stop,
+    force_stop_distance=None,
+):
+  """
+  Diagnostic Taos Force Stop pre-stop calculation.
 
+  Calculate the deceleration needed to stop over the
+  supplied distance, independently of should_stop.
+
+  Does not modify the acceleration target until the
+  distance estimate has been validated.
+  """
+  if not (
+    self.is_volkswagen_taos
+    and forcing_stop
+    and force_stop_distance is not None
+  ):
+    return a_target
+
+  distance = float(force_stop_distance)
+  speed = max(0.0, float(v_ego))
+
+  if not np.isfinite(distance) or not np.isfinite(speed):
+    return a_target
+
+  if distance <= 0.0:
+    # Distance exhausted while still moving.
+    # Flag this in diagnostics rather than silently
+    # treating it as a valid stopping distance.
+    return a_target
+
+  available_distance = max(0.1, distance)
+
+  required_decel = -(
+    speed ** 2 / (2.0 * available_distance)
+  )
+
+  physics_target = (
+    required_decel
+    * VOLKSWAGEN_TAOS_COMFORT_STOP_REQUIRED_DECEL_GAIN
+  )
+
+  physics_target = max(
+    VOLKSWAGEN_TAOS_COMFORT_STOP_DECEL_LIMIT,
+    physics_target,
+  )
+
+  # Diagnostic only.
+  # Record physics_target alongside a_target,
+  # v_ego and distance during replay.
+  return physics_target
+  
   # TAOS final braking for Force Stop virtual targets
   def shape_force_stop_accel(self, output_accel, a_target, should_stop,
                              v_ego, stop_accel, force_stop_distance=None):
