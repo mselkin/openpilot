@@ -1915,8 +1915,8 @@
         "description": "Tune where Force Stops bring the car to rest. Positive values let the car roll further before stopping (longer stop, closer to the line). Negative values stop the car sooner (more buffer before the line).",
         "data_type": "int",
         "ui_type": "numeric",
-        "min": -20.0,
-        "max": 20.0,
+        "min": -6.0,
+        "max": 6.0,
         "parent_key": "QOLLongitudinal",
         "settings_tier": "simple"
       },
