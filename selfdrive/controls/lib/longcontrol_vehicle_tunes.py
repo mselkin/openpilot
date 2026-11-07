@@ -400,7 +400,7 @@ class LongControlVehicleTuning:
 
     available_distance = max(
       0.1,
-      stop_distance - VOLKSWAGEN_TAOS_COMFORT_STOP_DESIRED_GAP
+      stop_distance
     )
 
     # Deceleration required to reduce closing speed to zero.
