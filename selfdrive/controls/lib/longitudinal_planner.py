@@ -325,6 +325,9 @@ TRACKED_VISION_MODEL_CAP_MAX_GAP_BUFFER_GAIN = 0.25
 TRACKED_VISION_MODEL_CAP_MIN_DECEL = 0.45
 TRACKED_VISION_MODEL_CAP_MAX_DECEL = 1.10
 
+OFFSET_M_MIN = -6.0
+OFFSET_M_MAX = 6.0
+
 # Lookup table for turns
 _A_TOTAL_MAX_V = [3.5, 3.5, 3.2]
 _A_TOTAL_MAX_BP = [0., 20., 40.]
@@ -2357,12 +2360,19 @@ class LongitudinalPlanner:
     if stop_length > force_stop_handoff_m:
       # ForceStopDistanceOffset shifts the perceived line for the v_cruise ceiling, so it has
       # to shift the obstacle too or the slider barely moves anything now that stop_x leads.
-      offset_ft = max(OFFSET_FT_MIN, min(OFFSET_FT_MAX, int(getattr(starpilot_toggles, 'force_stop_distance_offset', 0) or 0)))
+      #offset_ft = max(OFFSET_FT_MIN, min(OFFSET_FT_MAX, int(getattr(starpilot_toggles, 'force_stop_distance_offset', 0) or 0)))
+      #force_stop_x = (
+      #  stop_length * FORCE_STOP_OBSTACLE_TRIM + offset_ft * FT_TO_M + STOP_DISTANCE +
+      #  get_force_stop_distance_bias(self.CP.carFingerprint)
+      #)
+      offset_m_raw = float(getattr(starpilot_toggles, 'force_stop_distance_offset', 0) or 0.0)
+      offset_m = max(OFFSET_M_MIN, min(OFFSET_M_MAX, offset_m_raw))
+
       force_stop_x = (
-        stop_length * FORCE_STOP_OBSTACLE_TRIM + offset_ft * FT_TO_M + STOP_DISTANCE +
+        stop_length * FORCE_STOP_OBSTACLE_TRIM + offset_m + STOP_DISTANCE +
         get_force_stop_distance_bias(self.CP.carFingerprint)
       )
-
+    
     stopped_lead_obstacle_bias = (0.0, 0.0)
     if (
       not bool(getattr(sm['modelV2'].action, 'shouldStop', False)) and
