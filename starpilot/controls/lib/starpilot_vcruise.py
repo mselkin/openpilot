@@ -96,8 +96,10 @@ FORCE_STOP_CAP_TAPER_M = 60.0  # m — slack fades to 0 as the cap closes. The s
                           # that far past the real one.
 
 # Knob bounds (mirror of UI slider; defense in depth)
-OFFSET_FT_MIN = -20
-OFFSET_FT_MAX = 20
+#OFFSET_FT_MIN = -20
+#OFFSET_FT_MAX = 20
+OFFSET_M_MIN = -6
+OFFSET_M_MAX = 6
 
 
 def get_lead_veto_distance(car_params):
@@ -655,8 +657,11 @@ class StarPilotVCruise:
     #offset_ft = max(OFFSET_FT_MIN, min(OFFSET_FT_MAX, offset_ft_raw))
     #offset_m = offset_ft * FT_TO_M
     # Force Stop Offset stored directly in metres.
+    #offset_m_raw = int(getattr(starpilot_toggles, 'force_stop_distance_offset', 0) or 0)
+    #offset_m = max(-6, min(6, offset_m_raw))
+    # Force Stop Offset is stored in metres.
     offset_m_raw = int(getattr(starpilot_toggles, 'force_stop_distance_offset', 0) or 0)
-    offset_m = max(-6, min(6, offset_m_raw))
+    offset_m = max(OFFSET_M_MIN, min(OFFSET_M_MAX, offset_m_raw))
 
     # cleared on every path; only the far-approach envelope below republishes it
     self.approach_stop_length = 0.0
