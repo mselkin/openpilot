@@ -500,6 +500,30 @@ class LongControlVehicleTuning:
     return target_accel
     # return max(float(output_accel), float(stop_accel))
 
+  # Volkswagen Taos Force Stop pre-stop PID output cap.
+  def cap_force_stop_prestop_output(self, raw_output_accel, v_ego,
+                                    forcing_stop, force_stop_distance):
+    """
+    Prevent PID from requesting weaker braking than the
+    Force Stop pre-stop calculation requires.
+
+    Preserve stronger braking already requested by PID.
+    """
+    if not self.is_volkswagen_taos:
+      return raw_output_accel
+
+    if not forcing_stop or force_stop_distance is None:
+      return raw_output_accel
+
+    force_stop_target = self.shape_force_stop_prestop_target(
+      raw_output_accel,
+      v_ego,
+      forcing_stop,
+      force_stop_distance,
+    )
+
+    return min(float(raw_output_accel), float(force_stop_target))
+  
   # TAOS Prebraking
   def shape_volkswagen_taos_prestop_target(self, a_target, v_ego, should_stop, leads=None):
     """Shed closing speed early before handing off to the normal stopping state."""
