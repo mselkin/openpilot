@@ -601,13 +601,7 @@ class Controls:
 
                                                 force_stop_distance=(
                                                   float(self.sm['starpilotPlan'].forcingStopLength)
-                                                  + max(
-                                                      OFFSET_FT_MIN,
-                                                      min(
-                                                        OFFSET_FT_MAX,
-                                                        int(self.starpilot_toggles.force_stop_distance_offset or 0)
-                                                      )
-                                                    ) * 0.3048
+                                                  + float(self.starpilot_toggles.force_stop_distance_offset or 0)
                                                   if self.sm['starpilotPlan'].forcingStop
                                                   else None
                                                 )),
