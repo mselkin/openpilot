@@ -66,8 +66,9 @@ from openpilot.selfdrive.car.cruise import V_CRUISE_UNSET
 from openpilot.common.swaglog import cloudlog
 from cereal import log
 
-OFFSET_M_MIN = -6.0
-OFFSET_M_MAX = 6.0
+#OFFSET_M_MIN = -6.0
+#OFFSET_M_MAX = 6.0
+from openpilot.starpilot.controls.lib.starpilot_vcruise import OFFSET_M_MIN, OFFSET_M_MAX
 
 LaneChangeState = log.LaneChangeState
 LaneChangeDirection = log.LaneChangeDirection
