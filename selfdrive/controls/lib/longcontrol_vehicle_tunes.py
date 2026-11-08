@@ -487,7 +487,8 @@ class LongControlVehicleTuning:
     previous_accel = float(output_accel)
 
     # Limit how quickly braking is released.
-    release_rate = 0.8  # m/s³
+    #release_rate = 0.8  # m/s³
+    release_rate = 1000.0  # m/s³
     max_release_step = release_rate * DT_CTRL
 
     if target_accel > previous_accel:
