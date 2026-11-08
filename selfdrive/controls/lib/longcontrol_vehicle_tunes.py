@@ -70,6 +70,10 @@ HYUNDAI_SANTA_FE_FINAL_STOP_CAP_V = [-0.25, -0.30, -0.50, -0.90]
 # VOLKSWAGEN_TAOS_COMFORT_STOP
 # VOLKSWAGEN_TAOS_PRESTOP
 
+# VOLKSWAGEN_TAOS_FORCE_PRESTOP
+VOLKSWAGEN_TAOS_FORCE_PRESTOP_REQUIRED_DECEL_GAIN = 1.42
+VOLKSWAGEN_TAOS_FORCE_PRESTOP_DECEL_LIMIT = -3.0
+
 # Use % of the calculated deceleration required to eliminate.
 # closing speed over the available distance.
 # VOLKSWAGEN_TAOS_PRESTOP_REQUIRED_DECEL_GAIN = 1.35
@@ -397,15 +401,15 @@ class LongControlVehicleTuning:
     speed = max(0.0, float(v_ego))
 
     if not np.isfinite(distance) or not np.isfinite(speed):
-      # return a_target
-      return -0.55
+      return a_target
+      # return -0.55
 
-    if distance <= 0.0:
+    # if distance <= 0.0:
       # Distance exhausted while still moving.
       # Flag this in diagnostics rather than silently
       # treating it as a valid stopping distance.
       # return a_target
-      return -0.55
+      # return -0.55
 
     available_distance = max(0.1, distance)
 
@@ -415,17 +419,13 @@ class LongControlVehicleTuning:
 
     physics_target = (
       required_decel
-      * VOLKSWAGEN_TAOS_COMFORT_STOP_REQUIRED_DECEL_GAIN
+      * VOLKSWAGEN_TAOS_FORCE_PRESTOP_REQUIRED_DECEL_GAIN
     )
 
     physics_target = max(
-      VOLKSWAGEN_TAOS_COMFORT_STOP_DECEL_LIMIT,
+      VOLKSWAGEN_TAOS_FORCE_PRESTOP_DECEL_LIMIT,
       physics_target,
     )
-
-    # Diagnostic only.
-    # Record physics_target alongside a_target,
-    # v_ego and distance during replay.
     return physics_target
 
   # TAOS final braking for Force Stop virtual targets
