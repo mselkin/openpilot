@@ -338,10 +338,30 @@ class LongControl:
         )
       else:
         # Preserve the original stopping ramp outside the Taos Force Stop path.
-        if output_accel > starpilot_toggles.stopAccel:
-          output_accel = min(output_accel, 0.0)
-          output_accel -= starpilot_toggles.stoppingDecelRate * DT_CTRL
+        #if output_accel > starpilot_toggles.stopAccel:
+        #  output_accel = min(output_accel, 0.0)
+        #  output_accel -= starpilot_toggles.stoppingDecelRate * DT_CTRL
 
+        # Original stopping ramp, with low-speed brake softening.
+        if CS.vEgo > starpilot_toggles.vEgoStopping:
+          # Original behaviour: increase braking toward stopAccel,
+          # but preserve stronger existing braking.
+          if output_accel > starpilot_toggles.stopAccel:
+            output_accel = min(output_accel, 0.0)
+            output_accel -= starpilot_toggles.stoppingDecelRate * DT_CTRL
+        else:
+          # Below vEgoStopping, smoothly transition toward stopAccel
+          # from either direction.
+          #stop_target = float(starpilot_toggles.stopAccel)
+          #accel_step = float(starpilot_toggles.stoppingDecelRate) * DT_CTRL
+          #if output_accel < stop_target:
+          #   Release excessive braking gradually.
+          #  output_accel = min(stop_target, output_accel + accel_step)
+          #elif output_accel > stop_target:
+          #   Increase braking gradually.
+          #  output_accel = max(stop_target, min(output_accel, 0.0) - accel_step)
+          output_accel = starpilot_toggles.stopAccel
+        
         # Existing lead-vehicle stopping routine, unchanged.
         output_accel = self.vehicle_tuning.shape_stopping_accel(
           output_accel, a_target, should_stop, CS.vEgo,
