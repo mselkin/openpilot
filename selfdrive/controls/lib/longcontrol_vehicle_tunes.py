@@ -399,7 +399,7 @@ class LongControlVehicleTuning:
 
     # distance = float(force_stop_distance)
     # distance = float(force_stop_distance - 4)
-    distance = float(float(force_stop_distance) * 0.5)
+    distance = float(float(force_stop_distance) * 0.8)
     speed = max(0.0, float(v_ego))
 
     if not np.isfinite(distance) or not np.isfinite(speed):
@@ -430,11 +430,8 @@ class LongControlVehicleTuning:
     )
     # return physics_target
     # Never weaken stronger braking requested by the normal planner.
-    return min(
-      float(a_target),
-      physics_target
-    )
-
+    # return min(float(a_target),physics_target)
+    return min(float(a_target),physics_target)
 
   # TAOS final braking for Force Stop virtual targets
   def shape_force_stop_accel(self, output_accel, a_target, should_stop,
