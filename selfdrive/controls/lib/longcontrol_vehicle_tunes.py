@@ -431,7 +431,7 @@ class LongControlVehicleTuning:
     # return physics_target
     # Never weaken stronger braking requested by the normal planner.
     # return min(float(a_target),physics_target)
-    return min(float(a_target),physics_target)
+    return float(physics_target)
 
   # TAOS final braking for Force Stop virtual targets
   def shape_force_stop_accel(self, output_accel, a_target, should_stop,
