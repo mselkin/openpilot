@@ -452,15 +452,15 @@ class LongControlVehicleTuning:
 
     stop_distance = float(force_stop_distance)
 
-    if not np.isfinite(stop_distance) or stop_distance <= 0.0:
+    # if not np.isfinite(stop_distance) or stop_distance <= 0.0:
       # return output_accel
-      return -0.55
-
-    lead_speed = 0.0
+      # return -0.55
+    if not np.isfinite(stop_distance):
+      return output_accel
 
     closing_speed = max(
       0.0,
-      float(v_ego) - lead_speed
+      float(v_ego)
     )
 
     available_distance = max(
