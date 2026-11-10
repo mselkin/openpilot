@@ -441,6 +441,8 @@ class LongControlVehicleTuning:
     Uses the same braking mathematics and settings as
     shape_stopping_accel(), but for a stationary target.
     """
+
+    return -0.55                           
     if not (
       self.is_volkswagen_taos and
       should_stop and
