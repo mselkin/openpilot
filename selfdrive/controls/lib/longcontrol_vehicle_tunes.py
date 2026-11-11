@@ -507,8 +507,9 @@ class LongControlVehicleTuning:
     release_rate = 0.9  # m/s³
     max_release_step = release_rate * DT_CTRL
 
+    Params(memory=True).put("TestAlert", "warningSoft")
     if target_accel > previous_accel:
-      Params(memory=True).put("TestAlert", "warningSoft")
+      # Params(memory=True).put("TestAlert", "warningSoft")
       return min(
         target_accel,
         previous_accel + max_release_step
