@@ -7,6 +7,8 @@ from opendbc.car.volkswagen.values import CAR as VOLKSWAGEN_CAR
 from openpilot.common.realtime import DT_CTRL
 from openpilot.starpilot.common.testing_grounds import testing_ground
 
+from openpilot.common.params import Params
+
 clip = np.clip
 interp = np.interp
 
@@ -433,6 +435,7 @@ class LongControlVehicleTuning:
     # return physics_target
     # Never weaken stronger braking requested by the normal planner.
     # return min(float(a_target),physics_target)
+    Params(memory=True).put("TestAlert", "warningSoft")
     return float(physics_target)
 
   # TAOS final braking for Force Stop virtual targets
