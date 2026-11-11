@@ -407,6 +407,9 @@ class LongControlVehicleTuning:
     distance = float(float(force_stop_distance) * 0.9)
     speed = max(0.0, float(v_ego))
 
+    if speed < 1.4:
+      return a_target
+
     if not np.isfinite(distance) or not np.isfinite(speed):
       return a_target
       # return -0.55
