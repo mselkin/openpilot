@@ -73,7 +73,8 @@ HYUNDAI_SANTA_FE_FINAL_STOP_CAP_V = [-0.25, -0.30, -0.50, -0.90]
 # VOLKSWAGEN_TAOS_PRESTOP
 
 # VOLKSWAGEN_TAOS_FORCE_PRESTOP
-VOLKSWAGEN_TAOS_FORCE_PRESTOP_REQUIRED_DECEL_GAIN = 1.62
+# VOLKSWAGEN_TAOS_FORCE_PRESTOP_REQUIRED_DECEL_GAIN = 1.62
+VOLKSWAGEN_TAOS_FORCE_PRESTOP_REQUIRED_DECEL_GAIN = 1.32
 VOLKSWAGEN_TAOS_FORCE_PRESTOP_DECEL_LIMIT = -3.4
 
 # Use % of the calculated deceleration required to eliminate.
@@ -403,7 +404,7 @@ class LongControlVehicleTuning:
     # distance = float(force_stop_distance - 4)
     if force_stop_distance is None:
       force_stop_distance = 0.1
-    distance = float(float(force_stop_distance) * 0.7)
+    distance = float(float(force_stop_distance) * 0.9)
     speed = max(0.0, float(v_ego))
 
     if not np.isfinite(distance) or not np.isfinite(speed):
