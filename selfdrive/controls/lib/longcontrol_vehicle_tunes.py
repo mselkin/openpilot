@@ -435,7 +435,8 @@ class LongControlVehicleTuning:
     # return physics_target
     # Never weaken stronger braking requested by the normal planner.
     # return min(float(a_target),physics_target)
-    Params(memory=True).put("TestAlert", "warningSoft")
+    
+    # Params(memory=True).put("TestAlert", "warningSoft")
     return float(physics_target)
 
   # TAOS final braking for Force Stop virtual targets
@@ -450,18 +451,20 @@ class LongControlVehicleTuning:
     return -0.55                           
     if not (
       self.is_volkswagen_taos and
-      should_stop and
-      force_stop_distance is not None
+      should_stop
+      # force_stop_distance is not None
     ):
       return output_accel
-
+      
+    if force_stop_distance is None:
+      force_stop_distance = 0.1
     stop_distance = float(force_stop_distance)
 
     # if not np.isfinite(stop_distance) or stop_distance <= 0.0:
       # return output_accel
       # return -0.55
-    if not np.isfinite(stop_distance):
-      return output_accel
+    # if not np.isfinite(stop_distance):
+    #   return output_accel
 
     closing_speed = max(
       0.0,
@@ -499,8 +502,9 @@ class LongControlVehicleTuning:
     previous_accel = float(output_accel)
 
     # Limit how quickly braking is released.
-    #release_rate = 0.8  # m/s³
-    release_rate = 1000.0  # m/s³
+    # release_rate = 0.8  # m/s³
+    # release_rate = 1000.0  # m/s³
+    release_rate = 0.9  # m/s³
     max_release_step = release_rate * DT_CTRL
 
     if target_accel > previous_accel:
@@ -508,7 +512,8 @@ class LongControlVehicleTuning:
         target_accel,
         previous_accel + max_release_step
       )
-
+      
+    Params(memory=True).put("TestAlert", "warningSoft")
     # Apply stronger braking demand immediately.
     return target_accel
     # return max(float(output_accel), float(stop_accel))
