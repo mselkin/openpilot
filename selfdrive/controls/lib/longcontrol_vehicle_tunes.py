@@ -393,13 +393,15 @@ class LongControlVehicleTuning:
     if not (
       self.is_volkswagen_taos
       and forcing_stop
-      and force_stop_distance is not None
+      # and force_stop_distance is not None
     ):
       return a_target
 
     # distance = float(force_stop_distance)
     # distance = float(force_stop_distance - 4)
-    distance = float(float(force_stop_distance) * 0.8)
+    if force_stop_distance is None:
+      force_stop_distance = 0.1
+    distance = float(float(force_stop_distance) * 0.7)
     speed = max(0.0, float(v_ego))
 
     if not np.isfinite(distance) or not np.isfinite(speed):
