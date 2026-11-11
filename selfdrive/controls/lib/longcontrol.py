@@ -307,7 +307,7 @@ class LongControl:
     taos_force_stop = (
       self.vehicle_tuning.is_volkswagen_taos
       and bool(forcing_stop)
-      and force_stop_distance is not None
+      # and force_stop_distance is not None
       and not taos_valid_lead
     )
     if self.long_control_state == LongCtrlState.off:
