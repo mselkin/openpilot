@@ -447,8 +447,7 @@ class LongControlVehicleTuning:
     Uses the same braking mathematics and settings as
     shape_stopping_accel(), but for a stationary target.
     """
-
-    return -0.55                           
+                        
     if not (
       self.is_volkswagen_taos and
       should_stop
@@ -508,12 +507,13 @@ class LongControlVehicleTuning:
     max_release_step = release_rate * DT_CTRL
 
     if target_accel > previous_accel:
+      Params(memory=True).put("TestAlert", "warningSoft")
       return min(
         target_accel,
         previous_accel + max_release_step
       )
       
-    Params(memory=True).put("TestAlert", "warningSoft")
+    # Params(memory=True).put("TestAlert", "warningSoft")
     # Apply stronger braking demand immediately.
     return target_accel
     # return max(float(output_accel), float(stop_accel))
