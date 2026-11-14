@@ -77,6 +77,11 @@ HYUNDAI_SANTA_FE_FINAL_STOP_CAP_V = [-0.25, -0.30, -0.50, -0.90]
 VOLKSWAGEN_TAOS_FORCE_PRESTOP_REQUIRED_DECEL_GAIN = 1.32
 VOLKSWAGEN_TAOS_FORCE_PRESTOP_DECEL_LIMIT = -3.4
 
+# VOLKSWAGEN_TAOS_FORCE_STOP
+# VOLKSWAGEN_TAOS_FORCE_PRESTOP_REQUIRED_DECEL_GAIN = 1.62
+VOLKSWAGEN_TAOS_FORCE_STOP_REQUIRED_DECEL_GAIN = 1.32
+VOLKSWAGEN_TAOS_FORCE_STOP_DECEL_LIMIT = -3.4
+
 # Use % of the calculated deceleration required to eliminate.
 # closing speed over the available distance.
 # VOLKSWAGEN_TAOS_PRESTOP_REQUIRED_DECEL_GAIN = 1.35
@@ -461,7 +466,8 @@ class LongControlVehicleTuning:
       
     if force_stop_distance is None:
       force_stop_distance = 0.1
-    stop_distance = float(force_stop_distance)
+    # stop_distance = float(force_stop_distance)
+    stop_distance = float(float(force_stop_distance) * 0.9)
 
     # if not np.isfinite(stop_distance) or stop_distance <= 0.0:
       # return output_accel
@@ -487,11 +493,11 @@ class LongControlVehicleTuning:
 
     physics_target = (
       required_decel *
-      VOLKSWAGEN_TAOS_COMFORT_STOP_REQUIRED_DECEL_GAIN
+      VOLKSWAGEN_TAOS_FORCE_STOP_REQUIRED_DECEL_GAIN
     )
 
     physics_target = max(
-      VOLKSWAGEN_TAOS_COMFORT_STOP_DECEL_LIMIT,
+      VOLKSWAGEN_TAOS_FORCE_STOP_DECEL_LIMIT,
       physics_target
     )
 
@@ -507,7 +513,7 @@ class LongControlVehicleTuning:
     # Limit how quickly braking is released.
     # release_rate = 0.8  # m/s³
     # release_rate = 1000.0  # m/s³
-    release_rate = 0.9  # m/s³
+    release_rate = 0.8  # m/s³
     max_release_step = release_rate * DT_CTRL
 
     Params(memory=True).put("TestAlert", "warningSoft")
