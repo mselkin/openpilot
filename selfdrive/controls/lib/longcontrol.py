@@ -429,22 +429,24 @@ class LongControl:
       self.reset()
 
     else:  # LongCtrlState.pid
-      a_target = self.vehicle_tuning.shape_gm_truck_accel_target(a_target, CS.vEgo, should_stop)
-      a_target = self.vehicle_tuning.shape_toyota_corolla_accel_target(
-        a_target, CS.vEgo, should_stop, self.last_output_accel,
-      )
-      a_target = self.vehicle_tuning.shape_toyota_sienna_accel_target(
-        a_target, CS.vEgo, should_stop, leads=leads,
-      )
-      a_target = self.vehicle_tuning.cap_toyota_sienna_lead_departure_accel(
-        a_target, CS.vEgo, leads=leads,
-      )
-      a_target = self.vehicle_tuning.shape_hyundai_elantra_lead_target(
-        a_target, CS.vEgo, should_stop, leads,
-      )
+      # a_target = self.vehicle_tuning.shape_gm_truck_accel_target(a_target, CS.vEgo, should_stop)
+      # a_target = self.vehicle_tuning.shape_toyota_corolla_accel_target(
+      #  a_target, CS.vEgo, should_stop, self.last_output_accel,
+      # )
+      # a_target = self.vehicle_tuning.shape_toyota_sienna_accel_target(
+      #  a_target, CS.vEgo, should_stop, leads=leads,
+      # )
+      # a_target = self.vehicle_tuning.cap_toyota_sienna_lead_departure_accel(
+      #  a_target, CS.vEgo, leads=leads,
+      # )
+      # a_target = self.vehicle_tuning.shape_hyundai_elantra_lead_target(
+      #  a_target, CS.vEgo, should_stop, leads,
+      # )
+      
       a_target = self.vehicle_tuning.shape_volkswagen_taos_prestop_target(
         a_target, CS.vEgo, should_stop, leads,
       )
+      
       # Only use the virtual Force Stop target when no valid real lead exists.
       if taos_force_stop:
         a_target = self.vehicle_tuning.shape_force_stop_prestop_target(
@@ -453,25 +455,31 @@ class LongControl:
           forcing_stop,
           force_stop_distance,
         )
+        
       error = a_target - CS.aEgo
       self.update_mpc_mode(self.experimental_mode)
-      self.vehicle_tuning.shape_volt_test_tune_integrator(self.pid, error, CS.vEgo)
-      self.vehicle_tuning.trim_volt_cruise_integrator(
-        self.pid, a_target, error, CS.vEgo, should_stop, has_lead,
-      )
+      
+      # self.vehicle_tuning.shape_volt_test_tune_integrator(self.pid, error, CS.vEgo)
+      # self.vehicle_tuning.trim_volt_cruise_integrator(
+      #  self.pid, a_target, error, CS.vEgo, should_stop, has_lead,
+      #)
+      
       self._trim_positive_overshoot_integrator(a_target, error, CS)
-      self.vehicle_tuning.trim_gm_truck_positive_hold_integrator(
-        self.pid, self.last_output_accel, a_target, error, CS,
-      )
-      self.vehicle_tuning.trim_gm_truck_negative_hold_integrator(
-        self.pid, self.last_output_accel, a_target, error, CS,
-      )
+      
+      # self.vehicle_tuning.trim_gm_truck_positive_hold_integrator(
+      #  self.pid, self.last_output_accel, a_target, error, CS,
+      # )
+      #self.vehicle_tuning.trim_gm_truck_negative_hold_integrator(
+      #  self.pid, self.last_output_accel, a_target, error, CS,
+      # )
+      
       feedforward = self.vehicle_tuning.get_longitudinal_feedforward(
         self.feedforward_gain, self.last_output_accel, a_target, CS.vEgo,
       )
       freeze_integrator = self.vehicle_tuning.get_integrator_freeze(
         self.last_output_accel, a_target, error, CS.vEgo, accel_limits,
       )
+      
       leaving_experimental = self.transitioning and self.prev_mode == 'blended' and self.current_mode == 'acc'
       if leaving_experimental:
         freeze_integrator = True
@@ -479,18 +487,19 @@ class LongControl:
                                          freeze_integrator=freeze_integrator)
       raw_output_accel = self._cap_positive_output_on_negative_target(raw_output_accel, a_target, error, CS)
       raw_output_accel = self.vehicle_tuning.apply_pedal_long_brake_bias(raw_output_accel, a_target, CS)
-      raw_output_accel = self.vehicle_tuning.apply_bolt_start_handoff_floor(
-        raw_output_accel,
-        self.last_output_accel,
-        a_target,
-        CS.vEgo,
-        previous_long_control_state == LongCtrlState.starting,
-        should_stop,
-        has_lead,
-      )
-      raw_output_accel = self.vehicle_tuning.cap_hyundai_elantra_lead_output(
-        raw_output_accel, CS.vEgo, should_stop, leads,
-      )
+      
+      # raw_output_accel = self.vehicle_tuning.apply_bolt_start_handoff_floor(
+      #  raw_output_accel,
+      #  self.last_output_accel,
+      #  a_target,
+      #  CS.vEgo,
+      #  previous_long_control_state == LongCtrlState.starting,
+      #  should_stop,
+      #  has_lead,
+      #)
+      # raw_output_accel = self.vehicle_tuning.cap_hyundai_elantra_lead_output(
+      #  raw_output_accel, CS.vEgo, should_stop, leads,
+      #)
 
       raw_output_accel = self.vehicle_tuning.cap_volkswagen_taos_prestop_output(
         raw_output_accel, CS.vEgo, should_stop, leads,
@@ -505,6 +514,7 @@ class LongControl:
           forcing_stop,
           force_stop_distance,
         )
+        should_stop = taos_force_stop
 
       if leaving_experimental:
         if raw_output_accel > self.last_output_accel:
@@ -526,11 +536,11 @@ class LongControl:
       else:
         output_accel = raw_output_accel
 
-      output_accel = self.vehicle_tuning.cap_subaru_stop_release_accel(
-        output_accel,
-        previous_long_control_state == LongCtrlState.stopping and CS.vEgo < self.CP.vEgoStarting and not should_stop,
-        should_stop,
-      )
+      # output_accel = self.vehicle_tuning.cap_subaru_stop_release_accel(
+      #  output_accel,
+      #  previous_long_control_state == LongCtrlState.stopping and CS.vEgo < self.CP.vEgoStarting and not should_stop,
+      #  should_stop,
+      # )
 
     if self.pedal_override_release_frames > 0:
       self.pedal_override_release_frames -= 1
