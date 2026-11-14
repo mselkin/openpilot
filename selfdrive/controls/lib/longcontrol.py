@@ -448,13 +448,13 @@ class LongControl:
       )
       
       # Only use the virtual Force Stop target when no valid real lead exists.
-      if taos_force_stop:
-        a_target = self.vehicle_tuning.shape_force_stop_prestop_target(
-          a_target,
-          CS.vEgo,
-          forcing_stop,
-          force_stop_distance,
-        )
+      # if taos_force_stop:
+      #  a_target = self.vehicle_tuning.shape_force_stop_prestop_target(
+      #    a_target,
+      #    CS.vEgo,
+      #    forcing_stop,
+      #    force_stop_distance,
+      #  )
         
       error = a_target - CS.aEgo
       self.update_mpc_mode(self.experimental_mode)
@@ -507,14 +507,14 @@ class LongControl:
 
       # Force Stop pre-stop output cap.
       # Only run when there is no valid real lead.
-      if taos_force_stop:
-        raw_output_accel = self.vehicle_tuning.cap_force_stop_prestop_output(
-          raw_output_accel,
-          CS.vEgo,
-          forcing_stop,
-          force_stop_distance,
-        )
-        should_stop = taos_force_stop
+      # if taos_force_stop:
+      #  raw_output_accel = self.vehicle_tuning.cap_force_stop_prestop_output(
+      #    raw_output_accel,
+      #    CS.vEgo,
+      #    forcing_stop,
+      #    force_stop_distance,
+      #  )
+      #  should_stop = taos_force_stop
 
       if leaving_experimental:
         if raw_output_accel > self.last_output_accel:
