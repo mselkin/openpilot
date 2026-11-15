@@ -369,10 +369,12 @@ class LongControl:
           output_accel, a_target, should_stop, CS.vEgo,
           has_lead, starpilot_toggles.stopAccel, leads=leads,
         )
-
-      output_accel = self._apply_moving_stop_target_follow(
-        output_accel, a_target, should_stop, CS, starpilot_toggles
-      )
+        output_accel = self._apply_moving_stop_target_follow(
+          output_accel, a_target, should_stop, CS, starpilot_toggles
+        )
+      # output_accel = self._apply_moving_stop_target_follow(
+      #  output_accel, a_target, should_stop, CS, starpilot_toggles
+      # )
 
       self.reset(preserve_stop_release=True)
       
