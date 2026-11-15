@@ -79,8 +79,10 @@ VOLKSWAGEN_TAOS_FORCE_PRESTOP_DECEL_LIMIT = -3.4
 
 # VOLKSWAGEN_TAOS_FORCE_STOP
 # VOLKSWAGEN_TAOS_FORCE_PRESTOP_REQUIRED_DECEL_GAIN = 1.62
-VOLKSWAGEN_TAOS_FORCE_STOP_REQUIRED_DECEL_GAIN = 1.32
-VOLKSWAGEN_TAOS_FORCE_STOP_DECEL_LIMIT = -3.4
+# VOLKSWAGEN_TAOS_FORCE_STOP_REQUIRED_DECEL_GAIN = 1.32
+# VOLKSWAGEN_TAOS_FORCE_STOP_DECEL_LIMIT = -3.4
+VOLKSWAGEN_TAOS_FORCE_STOP_REQUIRED_DECEL_GAIN = 1.42
+VOLKSWAGEN_TAOS_FORCE_STOP_DECEL_LIMIT = -3.94
 
 # Use % of the calculated deceleration required to eliminate.
 # closing speed over the available distance.
@@ -467,7 +469,7 @@ class LongControlVehicleTuning:
     if force_stop_distance is None:
       force_stop_distance = 0.1
     # stop_distance = float(force_stop_distance)
-    stop_distance = float(float(force_stop_distance) * 0.7)
+    stop_distance = float((float(force_stop_distance) * 0.7)-3.0)
 
     # if not np.isfinite(stop_distance) or stop_distance <= 0.0:
       # return output_accel
@@ -517,16 +519,16 @@ class LongControlVehicleTuning:
     max_release_step = release_rate * DT_CTRL
 
     # Params(memory=True).put("TestAlert", "warningSoft")
-    if target_accel > previous_accel:
+    #if target_accel > previous_accel:
       # Params(memory=True).put("TestAlert", "warningSoft")
-      return min(
-        target_accel,
-        previous_accel + max_release_step
-      )
+    #  return min(
+    #    target_accel,
+    #    previous_accel + max_release_step
+    #  )
       
     # Params(memory=True).put("TestAlert", "warningSoft")
     # Apply stronger braking demand immediately.
-    Params(memory=True).put("TestAlert", "warningSoft")
+    Params(memory=True).put("TestAlert", "prompt")
     return target_accel
     # return max(float(output_accel), float(stop_accel))
 
