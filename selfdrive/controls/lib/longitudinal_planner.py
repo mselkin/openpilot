@@ -3055,13 +3055,20 @@ class LongitudinalPlanner:
     ):
       output_a_target = max(output_a_target, STANDSTILL_LEAD_NUDGE_ACCEL)
 
+    # TAOS Force Stop Handoff
+    # force_stop_handoff = bool(
+    #  getattr(sm['starpilotPlan'], 'forcingStop', False) and
+    #  not lead_control_active and
+    #  (
+    #    float(getattr(sm['starpilotPlan'], 'forcingStopLength', float('inf'))) < 1.0 or
+    #    float(getattr(sm['starpilotPlan'], 'vCruise', float('inf'))) <= FORCE_STOP_HANDOFF_MAX_VCRUISE
+    #  )
+    #)
+    
+    # TAOS Force Stop Handoff
     force_stop_handoff = bool(
       getattr(sm['starpilotPlan'], 'forcingStop', False) and
-      not lead_control_active and
-      (
-        float(getattr(sm['starpilotPlan'], 'forcingStopLength', float('inf'))) < 1.0 or
-        float(getattr(sm['starpilotPlan'], 'vCruise', float('inf'))) <= FORCE_STOP_HANDOFF_MAX_VCRUISE
-      )
+      not lead_control_active
     )
 
     if force_stop_handoff:
@@ -3231,12 +3238,20 @@ class LongitudinalPlanner:
     longitudinalPlan.leadTrajectoryV1 = self.mpc.lead_xv_1[:, 1].tolist()
 
     longitudinalPlan.aTarget = float(self.output_a_target)
+
+    # TAOS Force Stop handoff
+    # force_stop_handoff = bool(
+    #  sm['starpilotPlan'].forcingStop and (
+    #    sm['starpilotPlan'].forcingStopLength < 1.0 or
+    #    sm['starpilotPlan'].vCruise <= FORCE_STOP_HANDOFF_MAX_VCRUISE
+    #  )
+    # )
+
+    # TAOS Force Stop handoff
     force_stop_handoff = bool(
-      sm['starpilotPlan'].forcingStop and (
-        sm['starpilotPlan'].forcingStopLength < 1.0 or
-        sm['starpilotPlan'].vCruise <= FORCE_STOP_HANDOFF_MAX_VCRUISE
-      )
+      sm['starpilotPlan'].forcingStop
     )
+    
     stop_sign_hold_speed = get_stop_sign_low_speed_hold(self.CP)
     stop_sign_low_speed_hold = bool(
       stop_sign_hold_speed is not None and
