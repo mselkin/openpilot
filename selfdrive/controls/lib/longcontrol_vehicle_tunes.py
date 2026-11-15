@@ -467,7 +467,7 @@ class LongControlVehicleTuning:
     if force_stop_distance is None:
       force_stop_distance = 0.1
     # stop_distance = float(force_stop_distance)
-    stop_distance = float(float(force_stop_distance) * 0.9)
+    stop_distance = float(float(force_stop_distance) * 0.7)
 
     # if not np.isfinite(stop_distance) or stop_distance <= 0.0:
       # return output_accel
@@ -516,7 +516,7 @@ class LongControlVehicleTuning:
     release_rate = 0.8  # m/s³
     max_release_step = release_rate * DT_CTRL
 
-    Params(memory=True).put("TestAlert", "warningSoft")
+    # Params(memory=True).put("TestAlert", "warningSoft")
     if target_accel > previous_accel:
       # Params(memory=True).put("TestAlert", "warningSoft")
       return min(
@@ -526,6 +526,7 @@ class LongControlVehicleTuning:
       
     # Params(memory=True).put("TestAlert", "warningSoft")
     # Apply stronger braking demand immediately.
+    Params(memory=True).put("TestAlert", "warningSoft")
     return target_accel
     # return max(float(output_accel), float(stop_accel))
 
