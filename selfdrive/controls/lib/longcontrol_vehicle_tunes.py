@@ -536,61 +536,85 @@ class LongControlVehicleTuning:
     return target_accel
     # return max(float(output_accel), float(stop_accel))
 
-  # TAOS final braking for Force Stop virtual targets  
+  # TAOS final braking for Force Stop virtual targets
   def shape_force_stop_accel(self, output_accel, a_target, should_stop,
                              v_ego, stop_accel, force_stop_distance=None):
     """
-    Diagnostic Force Stop braking calculation.
+    Experimental Force Stop controller for simulation.
 
-    Higher speed:
-      Distance-based braking calculation.
+    Calculate distance-based stopping demand, then use
+    speed-dependent release smoothing as the vehicle slows.
 
-    Lower speed:
-      Gradually increase the weighting of speed-based braking.
+    Does not weaken braking below the calculated demand.
     """
-    
+
+    if not self.is_volkswagen_taos or not should_stop:
+      return output_accel
+
+    if force_stop_distance is None:
+      return output_accel
+
+    values = (output_accel, a_target, v_ego,
+              stop_accel, force_stop_distance)
+
+    if not all(np.isfinite(float(x)) for x in values):
+      return output_accel
+
     speed = max(0.0, float(v_ego))
+    distance = float(force_stop_distance)
+    previous_accel = float(output_accel)
 
-    stop_distance = (
-      float(force_stop_distance) * 0.9
-    ) - 0.5
+    # Distance calculation.
+    STOP_RESERVE_M = 0.5
+    ACTUATOR_DELAY = 0.25
 
-    available_distance = max(0.1, stop_distance)
+    available_distance = max(
+      0.1,
+      distance - speed * ACTUATOR_DELAY - STOP_RESERVE_M
+    )
 
-    # Original distance-based braking calculation.
     required_decel = -(
       speed ** 2 / (2.0 * available_distance)
     )
 
-    distance_target = max(
+    physics_target = max(
       VOLKSWAGEN_TAOS_FORCE_STOP_DECEL_LIMIT,
-      required_decel *
-      VOLKSWAGEN_TAOS_FORCE_STOP_REQUIRED_DECEL_GAIN
+      required_decel * VOLKSWAGEN_TAOS_FORCE_STOP_REQUIRED_DECEL_GAIN
     )
 
-    # Speed-based target.
-    # At zero speed, requested deceleration approaches zero.
-    speed_target = -0.55 * min(
-      1.0,
-      speed / 1.0
+    # Maintain at least the configured stopping demand.
+    comfort_stop = min(float(stop_accel), 0.0)
+
+    target_accel = min(
+      physics_target,
+      comfort_stop,
+     float(a_target)
     )
 
-    # Gradual transition between 1.5 and 0.5 m/s.
-    # 1.0 = entirely distance-based.
-    # 0.0 = entirely speed-based.
-    distance_weight = np.clip(
-      (speed - 0.5) / 1.0,
-      0.0,
-      1.0
-    )
+    # Speed-dependent release rate:
+    # At higher speeds, release braking gradually.
+    # At lower speeds, allow faster release toward the
+    # selected stopping target.
+    release_rate = float(np.interp(
+      speed,
+      [0.0, 0.3, 0.8, 1.5],
+      [2.5, 2.0, 1.2, 0.8]
+    ))
 
-    target_accel = (
-      distance_weight * distance_target
-      + (1.0 - distance_weight) * speed_target
-    )
-    Params(memory=True).put("TestAlert", "prompt")
+    application_rate = 1.5
+
+    # Rate limits in m/s^2 per control cycle.
+    max_release_step = release_rate * DT_CTRL
+    max_application_step = application_rate * DT_CTRL
+
+    target_accel = float(np.clip(
+      target_accel,
+      previous_accel - max_application_step,
+      previous_accel + max_release_step
+    ))
+
     return target_accel
-  
+                           
   # Volkswagen Taos Force Stop pre-stop PID output cap.
   def cap_force_stop_prestop_output(self, raw_output_accel, v_ego,
                                     forcing_stop, force_stop_distance):
