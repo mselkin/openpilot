@@ -36,7 +36,8 @@ SELFDRIVE_STATE_TIMEOUT = 5
 SELFDRIVE_UNRESPONSIVE_TIMEOUT = 10
 
 ALERT_COLORS = {
-  AlertStatus.normal: rl.Color(0, 0, 0, 255),
+  # AlertStatus.normal: rl.Color(0, 0, 0, 255),
+  AlertStatus.normal: rl.Color(0, 180, 200, 255),
   AlertStatus.userPrompt: rl.Color(255, 115, 0, 255),
   AlertStatus.critical: rl.Color(255, 0, 21, 255),
   StarPilotAlertStatus.starpilot: rl.Color(23, 134, 68, 255),
