@@ -208,6 +208,7 @@ class HudRenderer(Widget):
     if compass_text:
       compass_font_size = 50
       compass_size = measure_text_cached(self._font_bold, compass_text, compass_font_size)
-      compass_pos = rl.Vector2(rect.x + rect.width / 2 - compass_size.x / 2, 230 - compass_size.y / 2)
+      # compass_pos = rl.Vector2(rect.x + rect.width / 2 - compass_size.x / 2, 230 - compass_size.y / 2)
       # compass_pos = rl.Vector2(rect.x + rect.width / 2 - compass_size.x / 2, unit_pos.y + unit_text_size.y + 25)
+      compass_pos = rl.Vector2(rect.x + rect.width / 2 - compass_size.x / 2, unit_pos.y + unit_text_size.y + 25)
       draw_text_with_shadow(self._font_bold, compass_text, compass_pos, compass_font_size, rl.WHITE)
