@@ -65,6 +65,14 @@ class ExpButton(Widget):
     self.wheel_tint: rl.Color | None = None
     self._txt_wheel: rl.Texture = gui_app.texture('icons/chffr_wheel.png', icon_size, icon_size)
     self._txt_exp: rl.Texture = gui_app.texture('icons/experimental.png', icon_size, icon_size)
+
+    self._txt_chill = gui_app.texture('/data/openpilot/starpilot/assets/other_images/chill_mode_icon.gif', icon_size, icon_size)
+    self._txt_stop = gui_app.texture('/data/openpilot/starpilot/assets/other_images/stop_sign.png', icon_size, icon_size)
+    self._txt_light = gui_app.texture('/data/openpilot/starpilot/assets/other_images/light_icon.gif', icon_size, icon_size)
+    self._txt_force_stop = gui_app.texture('/data/openpilot/starpilot/assets/other_images/force_stop.png', icon_size, icon_size)
+    self._txt_curve = gui_app.texture('/data/openpilot/starpilot/assets/other_images/curve_icon.gif', icon_size, icon_size)
+    # self._txt_curve = gui_app.texture('/data/openpilot/starpilot/assets/other_images/turn_icon.gif', icon_size, icon_size)
+
     self._rect = rl.Rectangle(0, 0, button_size, button_size)
 
     self._steer_angle_filter = FirstOrderFilter(0.0, 0.1, 1 / gui_app.target_fps)
@@ -150,7 +158,9 @@ class ExpButton(Widget):
     self._white_color.a = 180 if self.is_pressed or not self._engageable else 255
 
     exp_mode = self._held_or_actual_mode()
-    texture = self._txt_exp if exp_mode else self._txt_wheel
+    # texture = self._txt_exp if exp_mode else self._txt_wheel
+    texture = self._txt_wheel
+
     color = self._white_color
     tint = None
     car_state = ui_state.sm["carState"]
@@ -173,14 +183,32 @@ class ExpButton(Widget):
       tint = rl.Color(wheel_tint.r, wheel_tint.g, wheel_tint.b, self._white_color.a)
 
     rl.draw_circle(center_x, center_y, self._rect.width / 2, self._bg_color)
-    if tint is not None:
-      if exp_mode:
+    # if tint is not None:
+      # if exp_mode:
+    #  if texture != self._txt_wheel:
         # The experimental icon is already colored, so show the lateral mode
         # around it instead of obscuring the icon with a texture tint.
-        radius = self._rect.width / 2
-        rl.draw_ring(rl.Vector2(center_x, center_y), radius - 8, radius, 0, 360, 0, tint)
-      else:
+    #    radius = self._rect.width / 2
+    #    rl.draw_ring(rl.Vector2(center_x, center_y), radius - 8, radius, 0, 360, 0, tint)
+    #  else:
+    #    color = tint
+      if tint is not None:
         color = tint
+
+    # rotating_wheel = ui_state.starpilot_toggles.get("rotating_wheel", False) or self._params.get_bool("RotatingWheel")
+    # if texture == self._txt_wheel and rotating_wheel:
+    #   source_rect = rl.Rectangle(0, 0, texture.width, texture.height)
+    #   dest_rect = rl.Rectangle(center_x, center_y, texture.width, texture.height)
+    #   origin = rl.Vector2(texture.width / 2, texture.height / 2)
+    #   rl.draw_texture_pro(texture, source_rect, dest_rect, origin, -self._steer_angle_filter.x, color)
+    # else:
+    #   position = rl.Vector2(center_x - texture.width / 2, center_y - texture.height / 2)
+    #   if exp_mode and self._bg_color is not self._bg_colors["disengaged"]:
+    #     for offset, alpha in self.ICON_OUTLINE:
+    #       shadow = rl.Color(0, 0, 0, alpha)
+    #       for dx, dy in self.ICON_OUTLINE_DIRECTIONS:
+    #         rl.draw_texture_ex(texture, rl.Vector2(position.x + dx * offset, position.y + dy * offset), 0.0, 1.0, shadow)
+    #   rl.draw_texture_ex(texture, position, 0.0, 1.0, color)
 
     rotating_wheel = ui_state.starpilot_toggles.get("rotating_wheel", False) or self._params.get_bool("RotatingWheel")
     if texture == self._txt_wheel and rotating_wheel:
@@ -189,14 +217,58 @@ class ExpButton(Widget):
       origin = rl.Vector2(texture.width / 2, texture.height / 2)
       rl.draw_texture_pro(texture, source_rect, dest_rect, origin, -self._steer_angle_filter.x, color)
     else:
-      position = rl.Vector2(center_x - texture.width / 2, center_y - texture.height / 2)
-      if exp_mode and self._bg_color is not self._bg_colors["disengaged"]:
-        for offset, alpha in self.ICON_OUTLINE:
-          shadow = rl.Color(0, 0, 0, alpha)
-          for dx, dy in self.ICON_OUTLINE_DIRECTIONS:
-            rl.draw_texture_ex(texture, rl.Vector2(position.x + dx * offset, position.y + dy * offset), 0.0, 1.0, shadow)
+      position = rl.Vector2(
+        center_x - texture.width / 2,
+        center_y - texture.height / 2
+      )
       rl.draw_texture_ex(texture, position, 0.0, 1.0, color)
+      
+    self._draw_status_icon(center_x, center_y, exp_mode)
 
+  def _draw_status_icon(self, center_x, center_y, exp_mode):
+
+    # Default icon based on current driving mode
+    texture = self._txt_exp if exp_mode else self._txt_chill
+
+    if ui_state.sm.valid.get("starpilotPlan", False):
+      plan = ui_state.sm["starpilotPlan"]
+
+      forcing_stop = getattr(plan, "forcingStop", False)
+      red_light = getattr(plan, "redLight", False)
+
+      if forcing_stop and not red_light:
+        texture = self._txt_force_stop
+
+      elif red_light and exp_mode:
+        texture = self._txt_light
+
+    # Position to the left of the steering wheel
+    gap = 15
+    radius = self._rect.width / 2
+
+    icon_x = center_x - self._rect.width - gap
+    icon_y = center_y
+
+    # Circular background
+    rl.draw_circle(
+      int(icon_x),
+      int(icon_y),
+      radius,
+      self._black_bg
+    )
+
+    # Centre the selected PNG
+    position = rl.Vector2(
+      icon_x - texture.width / 2,
+      icon_y - texture.height / 2
+    )
+
+    # Preserve original PNG colours
+    rl.draw_texture_ex(
+      texture, position, 0.0, 1.0, rl.WHITE
+    )
+
+  
   def _held_or_actual_mode(self):
     now = time.monotonic()
     if self._hold_end_time and now < self._hold_end_time:
