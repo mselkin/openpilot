@@ -192,8 +192,8 @@ class ExpButton(Widget):
     #    rl.draw_ring(rl.Vector2(center_x, center_y), radius - 8, radius, 0, 360, 0, tint)
     #  else:
     #    color = tint
-      if tint is not None:
-        color = tint
+    if tint is not None:
+      color = tint
 
     # rotating_wheel = ui_state.starpilot_toggles.get("rotating_wheel", False) or self._params.get_bool("RotatingWheel")
     # if texture == self._txt_wheel and rotating_wheel:
