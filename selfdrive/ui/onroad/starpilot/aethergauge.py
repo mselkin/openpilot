@@ -16,7 +16,7 @@ from openpilot.selfdrive.ui.lib.starpilot_status import get_border_color
 # --- Scale factor (single knob for all pixel-space dimensions) ---
 
 # SCALE = 1.5
-SCALE = 2.0
+SCALE = 1.6
 
 
 # --- Named constants ---
@@ -60,8 +60,8 @@ COLOR_CEM_SPEED = rl.Color(112, 192, 216, 255)
 COLOR_REDUCTION = rl.Color(255, 191, 0, 220)
 
 # Set to True to force test-cycle mode (flip back to False before pushing)
-# TEST_CYCLE = False
-TEST_CYCLE = True
+TEST_CYCLE = False
+# TEST_CYCLE = True
 
 
 # --- Conversion helpers ---
